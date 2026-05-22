@@ -1,26 +1,388 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+@theme {
+  --color-gtb-dark:    #050816;
+  --color-gtb-darker:  #030610;
+  --color-gtb-card:    #0B1020;
+  --color-gtb-card2:   #0d1526;
+  --color-gtb-navy:    #131d35;
+  --color-gtb-accent:  #00E0B8;
+  --color-gtb-accent2: #00C9A7;
+  --color-gtb-accent3: #00A88A;
+  --color-gtb-muted:   #64748b;
+  --color-gtb-subtle:  #94a3b8;
+  --color-gtb-danger:  #ef4444;
+  --color-gtb-success: #22c55e;
+  --color-gtb-warn:    #f59e0b;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: #050816;
+  color: #ffffff;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #0B1020; }
+::-webkit-scrollbar-thumb { background: #00E0B820; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #00E0B850; }
+
+/* ── Glassmorphism ── */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 224, 184, 0.12);
+}
+
+/* ── Glow Effects ── */
+.glow-teal {
+  box-shadow: 0 0 20px rgba(0, 224, 184, 0.35),
+              0 0 60px rgba(0, 224, 184, 0.12);
+}
+
+.glow-teal-sm {
+  box-shadow: 0 0 12px rgba(0, 224, 184, 0.3);
+}
+
+.glow-teal-lg {
+  box-shadow: 0 0 40px rgba(0, 224, 184, 0.4),
+              0 0 100px rgba(0, 224, 184, 0.15),
+              inset 0 1px 0 rgba(0, 224, 184, 0.2);
+}
+
+.text-glow {
+  text-shadow: 0 0 20px rgba(0, 224, 184, 0.6);
+}
+
+/* ── Gradient Text ── */
+.gradient-text {
+  background: linear-gradient(135deg, #00E0B8 0%, #00C9A7 50%, #00ffda 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-white {
+  background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Gradient Borders ── */
+.border-gradient {
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+}
+
+.border-gradient::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(0,224,184,0.4), rgba(0,224,184,0.05));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* ── Buttons ── */
+.btn-primary {
+  background: linear-gradient(135deg, #00E0B8, #00C9A7);
+  color: #050816;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 12px 24px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 224, 184, 0.35);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 30px rgba(0, 224, 184, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active { transform: translateY(0); }
+
+.btn-ghost {
+  background: transparent;
+  color: #00E0B8;
+  border: 1px solid rgba(0, 224, 184, 0.3);
+  font-weight: 500;
+  border-radius: 12px;
+  padding: 12px 24px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-ghost:hover {
+  background: rgba(0, 224, 184, 0.08);
+  border-color: rgba(0, 224, 184, 0.6);
+  box-shadow: 0 0 20px rgba(0, 224, 184, 0.15);
+}
+
+/* ── Input Fields ── */
+/*
+  IMPORTANT: .input-dark is in @layer components so that Tailwind utility
+  classes (pl-11, pr-12, etc.) in @layer utilities correctly override it.
+  Never move this back to unlayered CSS or pl-* overrides will stop working.
+*/
+@layer components {
+  .input-dark {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    /* Individual properties — NOT shorthand — so Tailwind pl-N / pr-N utilities win */
+    padding-top:    15px;
+    padding-bottom: 15px;
+    padding-left:   16px;
+    padding-right:  16px;
+    min-height: 52px;
+    color: #ffffff;
+    font-size: 15px;
+    line-height: 1.4;
+    width: 100%;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .input-dark::placeholder {
+    color: rgba(100, 116, 139, 0.8);
+  }
+
+  .input-dark:focus {
+    border-color: rgba(0, 224, 184, 0.5);
+    background: rgba(0, 224, 184, 0.03);
+    box-shadow: 0 0 0 3px rgba(0, 224, 184, 0.08);
+  }
+
+  /* Wrapper for inputs that contain an icon — provides relative positioning */
+  .input-wrap {
+    position: relative;
+  }
+
+  /* Standard left icon inside an input-wrap */
+  .input-icon-left {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    z-index: 1;
+  }
+
+  /* Standard right element (eye toggle, spinner) inside an input-wrap */
+  .input-icon-right {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    z-index: 1;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Fix native select dropdown options on all platforms */
+select.input-dark option,
+select.input-dark optgroup {
+  background-color: #0B1020;
+  color: #ffffff;
+}
+
+/* Hide ALL browser-injected icons inside inputs (contact, credential, password) */
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-strong-password-auto-fill-button,
+input::-webkit-caps-lock-indicator,
+input::-webkit-clear-button,
+input::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Prevent Chrome/Edge autofill from overriding our dark background and text color */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+input:-webkit-autofill:first-line,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0px 9999px #0B1020 inset !important;
+  box-shadow: 0 0 0px 9999px #0B1020 inset !important;
+  caret-color: #ffffff !important;
+  background-color: #0B1020 !important;
+  color: #ffffff !important;
+  transition: background-color 99999s ease-in-out 0s !important;
+}
+
+/* ── Animations ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(6deg); }
+  50%       { transform: translateY(-12px) rotate(6deg); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%       { transform: translateY(-8px) rotate(-3deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.8; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.animate-float  { animation: float  6s ease-in-out infinite; }
+.animate-float2 { animation: float2 8s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+.animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
+.animate-fade-in  { animation: fade-in  0.4s ease-out forwards; }
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-700 { animation-delay: 0.7s; }
+
+/* ── Shimmer Loading ── */
+.shimmer {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.03) 0%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.03) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Gradient Backgrounds ── */
+.hero-gradient {
+  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0,224,184,0.12) 0%, transparent 70%),
+              radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,201,167,0.06) 0%, transparent 60%),
+              #050816;
+}
+
+.section-gradient {
+  background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(0,224,184,0.05) 0%, transparent 70%),
+              #050816;
+}
+
+/* ── Card hover ── */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 224, 184, 0.25) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 224, 184, 0.08);
+}
+
+/* ── Sidebar transition ── */
+.sidebar-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ── Orb backgrounds ── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.orb-teal {
+  background: radial-gradient(circle, rgba(0,224,184,0.15) 0%, transparent 70%);
+}
+
+.orb-blue {
+  background: radial-gradient(circle, rgba(0,100,255,0.08) 0%, transparent 70%);
+}
+
+/* ── Status badges ── */
+.badge-success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.badge-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.badge-warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.badge-info {
+  background: rgba(0, 224, 184, 0.1);
+  color: #00E0B8;
+  border: 1px solid rgba(0, 224, 184, 0.2);
 }
