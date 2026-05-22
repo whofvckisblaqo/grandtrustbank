@@ -3,7 +3,7 @@ import LandingNav from '@/components/LandingNav';
 import GTBLogo from '@/components/GTBLogo';
 import {
   Shield, Zap, Globe, BarChart3, ArrowRight, Lock,
-  CheckCircle, Smartphone, CreditCard, Send, Bell
+  CheckCircle, Smartphone, CreditCard, Send, Bell, Star, Quote
 } from 'lucide-react';
 
 const features = [
@@ -24,6 +24,57 @@ const steps = [
   { step: '01', title: 'Create Your Account', desc: 'Fill in your details and get started in under 2 minutes.' },
   { step: '02', title: 'Verify Your Identity', desc: 'Quick KYC process to keep your account safe and compliant.' },
   { step: '03', title: 'Start Banking',        desc: 'Deposit, transfer, pay bills, and manage your finances with ease.' },
+];
+
+const testimonials = [
+  {
+    name: 'Marcus Okonkwo',
+    role: 'Entrepreneur, Lagos & New York',
+    avatar: 'MO',
+    color: '#00E0B8',
+    rating: 5,
+    text: 'Grand Trust Bank completely transformed how I manage cross-border payments. Moving funds between my US and Nigerian operations used to take days — now it\'s seconds. Absolutely game-changing.',
+  },
+  {
+    name: 'Sophia Hartmann',
+    role: 'CFO, Berlin-based SaaS Startup',
+    avatar: 'SH',
+    color: '#7dd3fc',
+    rating: 5,
+    text: 'The analytics dashboard alone is worth switching for. I have a real-time view of our company spend, instant FX rates, and the team card controls are flawless. Our finance team saved 6 hours a week.',
+  },
+  {
+    name: 'James Whitfield',
+    role: 'Property Investor, London',
+    avatar: 'JW',
+    color: '#f0c040',
+    rating: 5,
+    text: 'I\'ve used four different banks over the years. GTB is the first one that actually feels like it was built for someone with serious money to move. The security is bulletproof and the support is incredible.',
+  },
+  {
+    name: 'Aisha Bello',
+    role: 'Freelance Designer, Toronto',
+    avatar: 'AB',
+    color: '#00C9A7',
+    rating: 5,
+    text: 'Getting paid from international clients used to be a nightmare with hidden fees. GTB gives me the best exchange rates I\'ve seen anywhere, and the virtual card works perfectly for all my subscriptions.',
+  },
+  {
+    name: 'Liam Chen',
+    role: 'Tech Lead, San Francisco',
+    avatar: 'LC',
+    color: '#a78bfa',
+    rating: 5,
+    text: 'Set up my account in under 3 minutes. Sent $12,000 internationally the same day. No holds, no questions, no nonsense. The app is cleaner than anything else in the fintech space right now.',
+  },
+  {
+    name: 'Fatima Al-Rashid',
+    role: 'Import/Export Business, Dubai',
+    avatar: 'FA',
+    color: '#fb923c',
+    rating: 5,
+    text: 'Running an import business means I\'m constantly dealing with multi-currency invoices. GTB handles it all seamlessly. The loan facility also helped me bridge a cash flow gap at the perfect moment.',
+  },
 ];
 
 export default function LandingPage() {
@@ -425,6 +476,75 @@ export default function LandingPage() {
                   <h3 className="text-white font-semibold text-base mb-2">{title}</h3>
                   <p className="text-gtb-subtle text-sm leading-relaxed">{desc}</p>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 lg:py-28 border-t border-white/[0.06] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full badge-info text-xs font-medium mb-4">
+              <Star size={12} /> Customer Stories
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
+              Trusted by customers <span className="gradient-text">worldwide</span>
+            </h2>
+            <p className="text-gtb-subtle max-w-lg mx-auto">
+              From solo freelancers to growing businesses — see what real customers say about banking with GTB.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {testimonials.map(({ name, role, avatar, color, rating, text }) => (
+              <div key={name} className="glass-card rounded-2xl p-6 card-hover flex flex-col gap-4">
+                {/* Quote icon */}
+                <Quote size={22} style={{ color }} className="opacity-60 flex-shrink-0" />
+
+                {/* Stars */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: rating }).map((_, i) => (
+                    <Star key={i} size={13} className="fill-current text-gtb-accent" />
+                  ))}
+                </div>
+
+                {/* Text */}
+                <p className="text-gtb-subtle text-sm leading-relaxed flex-1">"{text}"</p>
+
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-2 border-t border-white/[0.06]">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
+                    style={{ background: `${color}20`, border: `1px solid ${color}35`, color }}
+                  >
+                    {avatar}
+                  </div>
+                  <div>
+                    <div className="text-white text-sm font-semibold">{name}</div>
+                    <div className="text-gtb-muted text-xs">{role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Trust bar */}
+          <div className="mt-12 flex flex-wrap justify-center items-center gap-8">
+            {[
+              { label: '4.9/5 App Store rating',    sub: 'Over 12,000 reviews' },
+              { label: '4.8/5 Trustpilot score',    sub: 'Rated Excellent' },
+              { label: '#1 Fintech bank 2025',       sub: 'FinTech Global Awards' },
+            ].map(({ label, sub }) => (
+              <div key={label} className="text-center">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} size={12} className="fill-current text-gtb-accent" />
+                  ))}
+                </div>
+                <div className="text-white text-sm font-semibold">{label}</div>
+                <div className="text-gtb-muted text-xs">{sub}</div>
               </div>
             ))}
           </div>
