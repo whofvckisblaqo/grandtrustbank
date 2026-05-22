@@ -33,26 +33,226 @@ export default function LandingPage() {
       <LandingNav />
 
       {/* Hero */}
-      <section className="hero-gradient relative pt-28 pb-20 lg:pt-36 lg:pb-32 overflow-hidden">
-        {/* Dot grid background */}
+      <section className="relative pt-28 pb-20 lg:pt-36 lg:pb-32 overflow-hidden" style={{ background: '#010810' }}>
+
+        {/* City skyline background */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          viewBox="0 0 1440 700"
+          preserveAspectRatio="xMidYMax slice"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            {/* Sky gradient */}
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#010810"/>
+              <stop offset="60%" stopColor="#020d1c"/>
+              <stop offset="100%" stopColor="#051428"/>
+            </linearGradient>
+            {/* Horizon teal glow */}
+            <radialGradient id="horizonGlow" cx="50%" cy="100%" r="60%">
+              <stop offset="0%" stopColor="#00E0B8" stopOpacity="0.18"/>
+              <stop offset="50%" stopColor="#00E0B8" stopOpacity="0.06"/>
+              <stop offset="100%" stopColor="#00E0B8" stopOpacity="0"/>
+            </radialGradient>
+            {/* Right glow from tall skyscraper */}
+            <radialGradient id="skyscraperGlow" cx="62%" cy="40%" r="25%">
+              <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.12"/>
+              <stop offset="100%" stopColor="#00C9A7" stopOpacity="0"/>
+            </radialGradient>
+            {/* Text readability overlay */}
+            <linearGradient id="overlay" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stopColor="#010810" stopOpacity="0.55"/>
+              <stop offset="35%"  stopColor="#010810" stopOpacity="0.20"/>
+              <stop offset="65%"  stopColor="#010810" stopOpacity="0.30"/>
+              <stop offset="100%" stopColor="#010810" stopOpacity="0.80"/>
+            </linearGradient>
+            {/* Window patterns */}
+            <pattern id="winA" x="0" y="0" width="8" height="10" patternUnits="userSpaceOnUse">
+              <rect x="1" y="1" width="5" height="7" fill="#00E0B8" opacity="0.55" rx="0.5"/>
+            </pattern>
+            <pattern id="winB" x="0" y="0" width="7" height="9" patternUnits="userSpaceOnUse">
+              <rect x="1" y="1" width="4" height="6" fill="#f0c040" opacity="0.45" rx="0.5"/>
+            </pattern>
+            <pattern id="winC" x="0" y="0" width="6" height="9" patternUnits="userSpaceOnUse">
+              <rect x="0.5" y="1" width="4" height="6" fill="#7dd3fc" opacity="0.35" rx="0.5"/>
+            </pattern>
+            <pattern id="winD" x="0" y="0" width="9" height="11" patternUnits="userSpaceOnUse">
+              <rect x="1" y="1" width="5" height="7" fill="#00E0B8" opacity="0.40" rx="0.5"/>
+              <rect x="1" y="9" width="5" height="1" fill="transparent"/>
+            </pattern>
+            <pattern id="winMix" x="0" y="0" width="10" height="12" patternUnits="userSpaceOnUse">
+              <rect x="1" y="1" width="4" height="8" fill="#00E0B8" opacity="0.50" rx="0.5"/>
+              <rect x="6" y="1" width="3" height="8" fill="#f0c040" opacity="0.35" rx="0.5"/>
+            </pattern>
+          </defs>
+
+          {/* Sky fill */}
+          <rect width="1440" height="700" fill="url(#sky)"/>
+
+          {/* Stars */}
+          {[
+            [80,30],[140,55],[220,20],[310,45],[400,18],[480,60],[570,25],[660,48],[750,15],[840,38],
+            [920,22],[1010,52],[1100,30],[1180,18],[1270,42],[1360,28],[1410,58],[50,70],[170,85],
+            [290,75],[430,90],[560,68],[700,82],[820,72],[960,88],[1090,65],[1220,80],[1380,75],
+          ].map(([x,y], i) => (
+            <circle key={i} cx={x} cy={y} r={i % 3 === 0 ? 1.2 : 0.7} fill="white" opacity={0.3 + (i % 4) * 0.1}/>
+          ))}
+
+          {/* ── BACK LAYER: distant buildings (darker, shorter) ── */}
+          {/* Far left cluster */}
+          <rect x="0"   y="420" width="60"  height="280" fill="#071220"/>
+          <rect x="55"  y="390" width="45"  height="310" fill="#081525"/>
+          <rect x="95"  y="430" width="55"  height="270" fill="#071220"/>
+          <rect x="145" y="400" width="40"  height="300" fill="#091628"/>
+          <rect x="180" y="450" width="50"  height="250" fill="#071220"/>
+          {/* Left-center cluster */}
+          <rect x="225" y="370" width="55"  height="330" fill="#091628"/>
+          <rect x="275" y="410" width="40"  height="290" fill="#081525"/>
+          <rect x="310" y="380" width="65"  height="320" fill="#0a1a2e"/>
+          <rect x="370" y="420" width="45"  height="280" fill="#071220"/>
+          {/* Center-back */}
+          <rect x="500" y="350" width="60"  height="350" fill="#0c1e34"/>
+          <rect x="555" y="380" width="50"  height="320" fill="#091628"/>
+          {/* Right cluster */}
+          <rect x="1050" y="400" width="55" height="300" fill="#091628"/>
+          <rect x="1100" y="370" width="65" height="330" fill="#0a1a2e"/>
+          <rect x="1160" y="420" width="45" height="280" fill="#071220"/>
+          <rect x="1200" y="390" width="55" height="310" fill="#081525"/>
+          <rect x="1250" y="440" width="40" height="260" fill="#071220"/>
+          <rect x="1285" y="400" width="60" height="300" fill="#091628"/>
+          <rect x="1340" y="430" width="50" height="270" fill="#071220"/>
+          <rect x="1385" y="410" width="55" height="290" fill="#081525"/>
+
+          {/* Back layer windows — teal tinted */}
+          <rect x="0"   y="420" width="60"  height="200" fill="url(#winC)" opacity="0.5"/>
+          <rect x="55"  y="390" width="45"  height="220" fill="url(#winC)" opacity="0.4"/>
+          <rect x="225" y="370" width="55"  height="250" fill="url(#winC)" opacity="0.45"/>
+          <rect x="310" y="380" width="65"  height="240" fill="url(#winC)" opacity="0.4"/>
+          <rect x="500" y="350" width="60"  height="260" fill="url(#winC)" opacity="0.45"/>
+          <rect x="1100" y="370" width="65" height="250" fill="url(#winC)" opacity="0.4"/>
+          <rect x="1200" y="390" width="55" height="230" fill="url(#winC)" opacity="0.45"/>
+
+          {/* ── MID LAYER: medium buildings ── */}
+          <rect x="30"  y="310" width="75"  height="390" fill="#0d2035"/>
+          <rect x="100" y="340" width="60"  height="360" fill="#0e2438"/>
+          <rect x="155" y="300" width="80"  height="400" fill="#0c1e34"/>
+          <rect x="230" y="280" width="70"  height="420" fill="#0f2640"/>
+          <rect x="295" y="320" width="85"  height="380" fill="#0d2035"/>
+          <rect x="375" y="290" width="65"  height="410" fill="#0c1e34"/>
+          <rect x="435" y="340" width="75"  height="360" fill="#0e2438"/>
+
+          {/* Right mid buildings */}
+          <rect x="980"  y="330" width="75" height="370" fill="#0d2035"/>
+          <rect x="1050" y="300" width="60" height="400" fill="#0c1e34"/>
+          <rect x="1105" y="320" width="80" height="380" fill="#0e2438"/>
+          <rect x="1180" y="270" width="70" height="430" fill="#0f2640"/>
+          <rect x="1245" y="310" width="85" height="390" fill="#0d2035"/>
+          <rect x="1325" y="290" width="65" height="410" fill="#0c1e34"/>
+          <rect x="1385" y="330" width="55" height="370" fill="#0e2438"/>
+
+          {/* Mid layer windows */}
+          <rect x="30"  y="310" width="75"  height="280" fill="url(#winB)" opacity="0.55"/>
+          <rect x="100" y="340" width="60"  height="250" fill="url(#winA)" opacity="0.50"/>
+          <rect x="155" y="300" width="80"  height="290" fill="url(#winB)" opacity="0.45"/>
+          <rect x="230" y="280" width="70"  height="300" fill="url(#winMix)" opacity="0.50"/>
+          <rect x="295" y="320" width="85"  height="270" fill="url(#winA)" opacity="0.45"/>
+          <rect x="375" y="290" width="65"  height="280" fill="url(#winB)" opacity="0.55"/>
+          <rect x="980"  y="330" width="75" height="270" fill="url(#winA)" opacity="0.50"/>
+          <rect x="1105" y="320" width="80" height="280" fill="url(#winB)" opacity="0.45"/>
+          <rect x="1180" y="270" width="70" height="300" fill="url(#winMix)" opacity="0.50"/>
+          <rect x="1245" y="310" width="85" height="270" fill="url(#winA)" opacity="0.45"/>
+          <rect x="1325" y="290" width="65" height="280" fill="url(#winB)" opacity="0.55"/>
+
+          {/* ── MAIN SKYSCRAPERS (center focus) ── */}
+
+          {/* Left main tower */}
+          <rect x="490" y="180" width="110" height="520" fill="#102840" rx="2"/>
+          {/* setback */}
+          <rect x="510" y="140" width="70"  height="50"  fill="#122e48" rx="1"/>
+          <rect x="530" y="100" width="30"  height="50"  fill="#142f48" rx="1"/>
+          {/* antenna */}
+          <rect x="543" y="60"  width="4"   height="45"  fill="#1a3d5c"/>
+          <circle cx="545" cy="58" r="3" fill="#00E0B8" opacity="0.9"/>
+          {/* windows */}
+          <rect x="495" y="185" width="100" height="440" fill="url(#winMix)" opacity="0.60"/>
+          <rect x="515" y="145" width="60"  height="44"  fill="url(#winA)"  opacity="0.55"/>
+
+          {/* Tallest center skyscraper */}
+          <rect x="620" y="80"  width="130" height="620" fill="#132c45" rx="2"/>
+          {/* stepped crown */}
+          <rect x="635" y="60"  width="100" height="30"  fill="#163450" rx="1"/>
+          <rect x="650" y="38"  width="70"  height="30"  fill="#183858" rx="1"/>
+          <rect x="665" y="18"  width="40"  height="26"  fill="#1a3c5e" rx="1"/>
+          {/* spire */}
+          <rect x="683" y="-20" width="4"   height="45"  fill="#1f4a72"/>
+          <circle cx="685" cy="-22" r="4"   fill="#00E0B8" opacity="0.95"/>
+          <circle cx="685" cy="-22" r="8"   fill="#00E0B8" opacity="0.15"/>
+          {/* windows */}
+          <rect x="625" y="85"  width="120" height="560" fill="url(#winD)"  opacity="0.60"/>
+          <rect x="640" y="65"  width="90"  height="28"  fill="url(#winA)"  opacity="0.50"/>
+          <rect x="655" y="44"  width="60"  height="22"  fill="url(#winA)"  opacity="0.45"/>
+          {/* accent glow lines */}
+          <rect x="620" y="80"  width="3"   height="620" fill="#00E0B8" opacity="0.06"/>
+          <rect x="747" y="80"  width="3"   height="620" fill="#00E0B8" opacity="0.06"/>
+
+          {/* Right main tower */}
+          <rect x="760" y="150" width="120" height="550" fill="#102840" rx="2"/>
+          <rect x="775" y="120" width="90"  height="38"  fill="#122e48" rx="1"/>
+          <rect x="790" y="90"  width="60"  height="38"  fill="#142f48" rx="1"/>
+          <rect x="818" y="50"  width="4"   height="46"  fill="#1a3d5c"/>
+          <circle cx="820" cy="48" r="3" fill="#f0c040" opacity="0.8"/>
+          <rect x="765" y="155" width="110" height="500" fill="url(#winMix)" opacity="0.58"/>
+          <rect x="780" y="125" width="80"  height="32"  fill="url(#winB)"  opacity="0.50"/>
+
+          {/* Second tallest — far right of center */}
+          <rect x="890" y="120" width="100" height="580" fill="#11263e" rx="2"/>
+          <rect x="905" y="100" width="70"  height="28"  fill="#13304c" rx="1"/>
+          <rect x="920" y="78"  width="40"  height="30"  fill="#163456" rx="1"/>
+          <rect x="938" y="38"  width="4"   height="46"  fill="#1a3d5c"/>
+          <circle cx="940" cy="36" r="3.5" fill="#00E0B8" opacity="0.85"/>
+          <rect x="895" y="125" width="90"  height="540" fill="url(#winA)"  opacity="0.55"/>
+
+          {/* Skyscraper glow */}
+          <rect width="1440" height="700" fill="url(#skyscraperGlow)"/>
+
+          {/* ── FRONT LAYER: close buildings (dark silhouettes) ── */}
+          <rect x="0"   y="560" width="90"  height="140" fill="#050e1a"/>
+          <rect x="85"  y="530" width="70"  height="170" fill="#060f1b"/>
+          <rect x="150" y="555" width="85"  height="145" fill="#050e1a"/>
+          <rect x="230" y="520" width="60"  height="180" fill="#060f1b"/>
+          <rect x="285" y="545" width="75"  height="155" fill="#050e1a"/>
+          <rect x="355" y="535" width="55"  height="165" fill="#060f1b"/>
+          <rect x="405" y="560" width="80"  height="140" fill="#050e1a"/>
+
+          <rect x="1000" y="560" width="80" height="140" fill="#050e1a"/>
+          <rect x="1075" y="535" width="55" height="165" fill="#060f1b"/>
+          <rect x="1125" y="545" width="75" height="155" fill="#050e1a"/>
+          <rect x="1195" y="520" width="60" height="180" fill="#060f1b"/>
+          <rect x="1250" y="555" width="85" height="145" fill="#050e1a"/>
+          <rect x="1330" y="530" width="70" height="170" fill="#060f1b"/>
+          <rect x="1395" y="560" width="45" height="140" fill="#050e1a"/>
+
+          {/* Ground — city base */}
+          <rect x="0" y="680" width="1440" height="20" fill="#020810"/>
+
+          {/* Horizon glow */}
+          <rect width="1440" height="700" fill="url(#horizonGlow)"/>
+
+          {/* Text readability overlay */}
+          <rect width="1440" height="700" fill="url(#overlay)"/>
+        </svg>
+
+        {/* Subtle dot-grid on top */}
         <div className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: 'radial-gradient(circle, rgba(0,224,184,0.07) 1px, transparent 1px)',
+            backgroundImage: 'radial-gradient(circle, rgba(0,224,184,0.05) 1px, transparent 1px)',
             backgroundSize: '36px 36px',
           }}
         />
-        {/* Abstract financial chart lines */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.06]" preserveAspectRatio="none">
-          <polyline points="0,80% 10%,65% 20%,70% 30%,50% 40%,55% 50%,35% 60%,40% 70%,20% 80%,30% 90%,15% 100%,25%"
-            fill="none" stroke="#00E0B8" strokeWidth="2"/>
-          <polyline points="0,90% 15%,75% 25%,80% 40%,60% 55%,65% 65%,45% 80%,50% 100%,35%"
-            fill="none" stroke="#00C9A7" strokeWidth="1.5"/>
-          <circle cx="30%" cy="50%" r="3" fill="#00E0B8"/>
-          <circle cx="50%" cy="35%" r="3" fill="#00E0B8"/>
-          <circle cx="70%" cy="20%" r="3" fill="#00E0B8"/>
-        </svg>
-        <div className="orb orb-teal w-[600px] h-[600px] -top-40 -right-40 animate-pulse-glow" />
-        <div className="orb orb-blue w-[400px] h-[400px] -bottom-20 -left-20 animate-pulse-glow delay-700" />
+
+        <div className="orb orb-teal w-[600px] h-[600px] -top-40 -right-40 animate-pulse-glow" style={{ opacity: 0.35 }} />
+        <div className="orb orb-blue w-[400px] h-[400px] -bottom-20 -left-20 animate-pulse-glow delay-700" style={{ opacity: 0.25 }} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
