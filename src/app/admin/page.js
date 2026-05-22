@@ -4,7 +4,7 @@ import {
   Shield, RefreshCw, CheckCircle, XCircle, Clock, ArrowRight,
   Globe, Users, ArrowLeftRight, BarChart3, Search, ChevronLeft,
   ChevronRight, UserCheck, UserX, DollarSign, AlertCircle, X,
-  TrendingUp, Wallet, Activity, Filter,
+  TrendingUp, Wallet, Activity, Filter, Landmark, FileText,
 } from 'lucide-react';
 
 const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n ?? 0);
@@ -591,6 +591,160 @@ function UsersTab() {
   );
 }
 
+// ─── LOANS TAB ─────────────────────────────────────────────────────────────────
+const fmt2 = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n ?? 0);
+
+const LOAN_STATUS = {
+  pending:  { label: 'Pending',  color: '#F59E0B', bg: 'bg-gtb-warn/10 border-gtb-warn/20' },
+  approved: { label: 'Approved', color: '#22C55E', bg: 'bg-gtb-success/10 border-gtb-success/20' },
+  rejected: { label: 'Rejected', color: '#EF4444', bg: 'bg-gtb-danger/10 border-gtb-danger/20' },
+  active:   { label: 'Active',   color: '#00E0B8', bg: 'bg-gtb-accent/10 border-gtb-accent/20' },
+  completed:{ label: 'Done',     color: '#64748b', bg: 'bg-white/5 border-white/10' },
+};
+
+function LoansTab() {
+  const [loans, setLoans]     = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [acting, setActing]   = useState('');
+  const [filter, setFilter]   = useState('pending');
+  const [notes, setNotes]     = useState({});
+  const [toast, setToast]     = useState('');
+  const [page, setPage]       = useState(1);
+  const [pages, setPages]     = useState(1);
+  const [total, setTotal]     = useState(0);
+
+  const showToast = msg => { setToast(msg); setTimeout(() => setToast(''), 3500); };
+
+  const fetchLoans = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page, limit: 15 });
+      if (filter) params.set('status', filter);
+      const res  = await fetch(`/api/admin/loans?${params}`);
+      const data = await res.json();
+      setLoans(data.loans || []);
+      setTotal(data.pagination?.total || 0);
+      setPages(data.pagination?.pages || 1);
+    } catch { setLoans([]); }
+    finally { setLoading(false); }
+  }, [page, filter]);
+
+  useEffect(() => { fetchLoans(); }, [fetchLoans]);
+
+  async function action(id, act) {
+    setActing(id + act);
+    try {
+      const res = await fetch(`/api/admin/loans/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: act, adminNotes: notes[id] || '' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      showToast((act === 'approve' ? '✓ ' : '✗ ') + data.message);
+      fetchLoans();
+    } catch (e) { showToast('Error: ' + e.message); }
+    finally { setActing(''); }
+  }
+
+  const statuses = ['pending', 'approved', 'rejected', 'active'];
+
+  return (
+    <div className="space-y-4">
+      {toast && (
+        <div className="fixed top-6 right-6 z-50 glass-card rounded-xl px-4 py-3 text-sm font-medium text-white shadow-2xl">{toast}</div>
+      )}
+
+      <div className="flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex gap-1 p-1 glass rounded-xl">
+          {statuses.map(s => (
+            <button key={s} onClick={() => { setFilter(s); setPage(1); }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
+                filter === s ? 'bg-gtb-accent text-gtb-dark' : 'text-gtb-muted hover:text-white'
+              }`}>{s}</button>
+          ))}
+        </div>
+        <div className="text-gtb-muted text-sm">{total} loan{total !== 1 ? 's' : ''}</div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="glass-card rounded-2xl p-5 shimmer h-28" />)}</div>
+      ) : loans.length === 0 ? (
+        <div className="glass-card rounded-2xl p-12 text-center">
+          <Landmark size={40} className="text-gtb-muted mx-auto mb-3" />
+          <p className="text-gtb-muted">No {filter} loans</p>
+        </div>
+      ) : loans.map(loan => {
+        const s = LOAN_STATUS[loan.status] || LOAN_STATUS.pending;
+        return (
+          <div key={loan._id} className="glass-card rounded-2xl p-5">
+            <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
+              <div>
+                <div className="text-white font-semibold text-sm capitalize">
+                  {loan.user?.firstName} {loan.user?.lastName}
+                  <span className="text-gtb-muted font-normal ml-2">· {loan.user?.email}</span>
+                </div>
+                <div className="text-gtb-muted text-xs mt-0.5">{new Date(loan.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+              </div>
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${s.bg}`} style={{ color: s.color }}>
+                {s.label}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+              {[
+                ['Type', loan.type],
+                ['Amount', fmt2(loan.amount)],
+                ['Monthly', fmt2(loan.monthlyPayment)],
+                ['Duration', `${loan.duration}mo`],
+              ].map(([k, v]) => (
+                <div key={k}>
+                  <div className="text-gtb-muted text-[10px] uppercase tracking-wider">{k}</div>
+                  <div className="text-white font-semibold text-sm capitalize mt-0.5">{v}</div>
+                </div>
+              ))}
+            </div>
+            {loan.purpose && <div className="text-gtb-subtle text-xs italic px-3 py-2 glass rounded-lg mb-3">"{loan.purpose}"</div>}
+
+            {loan.status === 'pending' && (
+              <div className="space-y-2">
+                <input type="text" placeholder="Admin notes (optional)"
+                  value={notes[loan._id] || ''}
+                  onChange={e => setNotes(n => ({ ...n, [loan._id]: e.target.value }))}
+                  className="input-dark w-full text-sm py-2" />
+                <div className="flex gap-2">
+                  <button onClick={() => action(loan._id, 'reject')} disabled={!!acting}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gtb-danger/10 border border-gtb-danger/20 text-gtb-danger text-sm font-medium hover:bg-gtb-danger/20 transition-all disabled:opacity-50">
+                    <XCircle size={15} /> Reject
+                  </button>
+                  <button onClick={() => action(loan._id, 'approve')} disabled={!!acting}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gtb-success/10 border border-gtb-success/20 text-gtb-success text-sm font-medium hover:bg-gtb-success/20 transition-all disabled:opacity-50">
+                    {acting === loan._id + 'approve'
+                      ? <span className="w-4 h-4 border-2 border-gtb-success/30 border-t-gtb-success rounded-full animate-spin" />
+                      : <CheckCircle size={15} />}
+                    Approve & Disburse
+                  </button>
+                </div>
+              </div>
+            )}
+            {loan.adminNotes && <div className="text-gtb-muted text-xs mt-2">Note: {loan.adminNotes}</div>}
+          </div>
+        );
+      })}
+
+      {pages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="flex items-center gap-1 px-3 py-2 glass rounded-xl text-sm text-gtb-subtle hover:text-white disabled:opacity-40">
+            <ChevronLeft size={15} /> Prev
+          </button>
+          <span className="text-gtb-muted text-sm">Page {page} of {pages}</span>
+          <button disabled={page === pages} onClick={() => setPage(p => p + 1)} className="flex items-center gap-1 px-3 py-2 glass rounded-xl text-sm text-gtb-subtle hover:text-white disabled:opacity-40">
+            Next <ChevronRight size={15} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── TRANSACTIONS TAB ──────────────────────────────────────────────────────────
 function TransactionsTab() {
   const [txns, setTxns]         = useState([]);
@@ -629,9 +783,9 @@ function TransactionsTab() {
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gtb-muted" />
-          <input type="text" placeholder="Search reference…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="input-dark w-full pl-9 text-sm py-2.5" />
+        <div className="input-wrap flex-1 min-w-48">
+          <span className="input-icon-left"><Search size={16} /></span>
+          <input type="text" placeholder="Search reference…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="input-dark w-full pl-11 text-sm py-2.5" />
         </div>
         {[
           { value: status,    setter: setStatus,    options: [['', 'All statuses'], ['completed', 'Completed'], ['pending', 'Pending'], ['failed', 'Failed']] },
@@ -742,12 +896,14 @@ export default function AdminPage() {
         <TabBtn label="Overview"     active={tab === 'overview'}     onClick={() => setTab('overview')} />
         <TabBtn label="Transfers"    active={tab === 'transfers'}    onClick={() => setTab('transfers')}    badge={stats.pendingTransfers} />
         <TabBtn label="Users"        active={tab === 'users'}        onClick={() => setTab('users')}        badge={stats.pendingKyc} />
+        <TabBtn label="Loans"        active={tab === 'loans'}        onClick={() => setTab('loans')} />
         <TabBtn label="Transactions" active={tab === 'transactions'} onClick={() => setTab('transactions')} />
       </div>
 
       {tab === 'overview'     && <OverviewTab stats={stats} loading={statsLoading} />}
       {tab === 'transfers'    && <TransfersTab />}
       {tab === 'users'        && <UsersTab />}
+      {tab === 'loans'        && <LoansTab />}
       {tab === 'transactions' && <TransactionsTab />}
     </div>
   );

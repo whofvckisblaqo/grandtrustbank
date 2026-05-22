@@ -1,11 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
 import {
   LayoutDashboard, CreditCard, ArrowLeftRight, Send,
-  Receipt, BarChart3, Settings, HelpCircle, LogOut, X, Landmark
+  Receipt, BarChart3, Settings, HelpCircle, LogOut, X,
+  Landmark, Coins, HandCoins
 } from 'lucide-react';
+import GTBLogo from './GTBLogo';
 
 const navItems = [
   { href: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
@@ -14,6 +15,8 @@ const navItems = [
   { href: '/transactions', icon: ArrowLeftRight,  label: 'Transactions' },
   { href: '/transfer',     icon: Send,            label: 'Transfer' },
   { href: '/bills',        icon: Receipt,         label: 'Bill Payments' },
+  { href: '/loans',        icon: HandCoins,       label: 'Loans' },
+  { href: '/crypto',       icon: Coins,           label: 'Crypto' },
   { href: '/analytics',   icon: BarChart3,        label: 'Analytics' },
 ];
 
@@ -60,14 +63,8 @@ function MobileNavLink({ href, icon: Icon, label }) {
 export function Sidebar({ onLogout }) {
   return (
     <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-gtb-card border-r border-white/[0.06] flex-shrink-0">
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-white/[0.06]">
-        <div className="w-9 h-9 rounded-xl bg-gtb-accent flex items-center justify-center flex-shrink-0">
-          <span className="text-gtb-dark font-black text-sm">G</span>
-        </div>
-        <div>
-          <div className="text-white font-bold text-sm leading-tight">Grand Trust</div>
-          <div className="text-gtb-accent text-[10px] font-medium">BANK</div>
-        </div>
+      <div className="px-5 py-5 border-b border-white/[0.06]">
+        <GTBLogo size={36} showText={true} />
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -95,8 +92,8 @@ export function MobileNav({ onLogout }) {
   const mobileItems = [
     { href: '/dashboard',    icon: LayoutDashboard, label: 'Home' },
     { href: '/accounts',     icon: Landmark,        label: 'Accounts' },
-    { href: '/cards',        icon: CreditCard,      label: 'Cards' },
     { href: '/transfer',     icon: Send,            label: 'Transfer' },
+    { href: '/crypto',       icon: Coins,           label: 'Crypto' },
     { href: '/transactions', icon: ArrowLeftRight,  label: 'History' },
   ];
   return (
@@ -116,12 +113,7 @@ export function MobileMenuDrawer({ open, onClose, onLogout }) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="absolute left-0 top-0 bottom-0 w-72 bg-gtb-card border-r border-white/[0.06] flex flex-col animate-slide-up">
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/[0.06]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gtb-accent flex items-center justify-center">
-              <span className="text-gtb-dark font-black text-sm">G</span>
-            </div>
-            <div className="text-white font-bold text-sm">Grand Trust Bank</div>
-          </div>
+          <GTBLogo size={34} showText={true} />
           <button onClick={onClose} className="text-gtb-muted hover:text-white p-1"><X size={20} /></button>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

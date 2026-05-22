@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import LandingNav from '@/components/LandingNav';
+import GTBLogo from '@/components/GTBLogo';
 import {
   Shield, Zap, Globe, BarChart3, ArrowRight, Lock,
   CheckCircle, Smartphone, CreditCard, Send, Bell
@@ -33,6 +34,23 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="hero-gradient relative pt-28 pb-20 lg:pt-36 lg:pb-32 overflow-hidden">
+        {/* Dot grid background */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(0,224,184,0.07) 1px, transparent 1px)',
+            backgroundSize: '36px 36px',
+          }}
+        />
+        {/* Abstract financial chart lines */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.06]" preserveAspectRatio="none">
+          <polyline points="0,80% 10%,65% 20%,70% 30%,50% 40%,55% 50%,35% 60%,40% 70%,20% 80%,30% 90%,15% 100%,25%"
+            fill="none" stroke="#00E0B8" strokeWidth="2"/>
+          <polyline points="0,90% 15%,75% 25%,80% 40%,60% 55%,65% 65%,45% 80%,50% 100%,35%"
+            fill="none" stroke="#00C9A7" strokeWidth="1.5"/>
+          <circle cx="30%" cy="50%" r="3" fill="#00E0B8"/>
+          <circle cx="50%" cy="35%" r="3" fill="#00E0B8"/>
+          <circle cx="70%" cy="20%" r="3" fill="#00E0B8"/>
+        </svg>
         <div className="orb orb-teal w-[600px] h-[600px] -top-40 -right-40 animate-pulse-glow" />
         <div className="orb orb-blue w-[400px] h-[400px] -bottom-20 -left-20 animate-pulse-glow delay-700" />
 
@@ -249,12 +267,7 @@ export default function LandingPage() {
       <footer className="border-t border-white/[0.06] py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gtb-accent flex items-center justify-center">
-                <span className="text-gtb-dark font-black text-xs">G</span>
-              </div>
-              <span className="text-white font-semibold">Grand Trust Bank</span>
-            </div>
+            <GTBLogo size={30} showText={true} textSize="sm" />
             <p className="text-gtb-muted text-sm">© 2026 Grand Trust Bank. FDIC &amp; FCA regulated.</p>
             <div className="flex gap-5 items-center">
               {['Privacy', 'Terms', 'Support'].map(l => (

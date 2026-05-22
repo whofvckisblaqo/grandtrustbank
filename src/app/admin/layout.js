@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Shield, LogOut, RefreshCw } from 'lucide-react';
+import GTBLogo from '@/components/GTBLogo';
 
 export default function AdminLayout({ children }) {
   const router   = useRouter();
@@ -9,9 +10,7 @@ export default function AdminLayout({ children }) {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    // Skip auth check on the login page itself
     if (pathname === '/admin/login') { setChecked(true); return; }
-
     fetch('/api/admin/auth/me')
       .then(r => {
         if (r.status === 401) router.replace('/admin/login');
@@ -25,7 +24,6 @@ export default function AdminLayout({ children }) {
     router.push('/admin/login');
   }
 
-  // Show nothing while checking auth (avoids flash of content)
   if (!checked) {
     return (
       <div className="min-h-screen bg-gtb-dark flex items-center justify-center">
@@ -37,28 +35,28 @@ export default function AdminLayout({ children }) {
     );
   }
 
-  // Login page gets no chrome
   if (pathname === '/admin/login') return <>{children}</>;
 
   return (
     <div className="min-h-screen bg-gtb-dark">
-      {/* Top navigation bar */}
       <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/[0.06] h-14">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gtb-danger/20 border border-gtb-danger/30 flex items-center justify-center">
-              <Shield size={15} className="text-gtb-danger" />
-            </div>
-            <div>
-              <span className="text-white font-bold text-sm">GTB Admin Portal</span>
-              <span className="text-gtb-muted text-xs ml-2">Restricted</span>
+          <div className="flex items-center gap-4">
+            <GTBLogo size={30} showText={false} />
+            <div className="h-5 w-px bg-white/10" />
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-md bg-gtb-danger/20 border border-gtb-danger/30 flex items-center justify-center">
+                <Shield size={12} className="text-gtb-danger" />
+              </div>
+              <span className="text-white font-bold text-sm">Admin Portal</span>
+              <span className="text-gtb-muted text-xs hidden sm:inline">— Restricted</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gtb-success/10 border border-gtb-success/20">
               <div className="w-1.5 h-1.5 rounded-full bg-gtb-success animate-pulse" />
-              <span className="text-gtb-success text-xs font-medium">Admin session active</span>
+              <span className="text-gtb-success text-xs font-medium">Session active</span>
             </div>
             <button
               onClick={handleLogout}
@@ -70,7 +68,6 @@ export default function AdminLayout({ children }) {
         </div>
       </header>
 
-      {/* Page content */}
       <main className="pt-14">
         {children}
       </main>
