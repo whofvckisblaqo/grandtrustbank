@@ -595,7 +595,7 @@ export default function LandingPage() {
                 <h3 className="text-white font-bold text-lg mb-1">Stay ahead of your finances</h3>
                 <p className="text-gtb-muted text-sm">Market updates, product news and exclusive offers — no spam.</p>
               </div>
-              <form className="flex gap-2 w-full md:w-auto" onSubmit={e => e.preventDefault()}>
+              <form className="flex gap-2 w-full md:w-auto" action="#">
                 <div className="relative flex-1 md:w-72">
                   <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gtb-muted pointer-events-none" />
                   <input
