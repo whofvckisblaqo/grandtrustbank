@@ -3,7 +3,9 @@ import LandingNav from '@/components/LandingNav';
 import GTBLogo from '@/components/GTBLogo';
 import {
   Shield, Zap, Globe, BarChart3, ArrowRight, Lock,
-  CheckCircle, Smartphone, CreditCard, Send, Bell, Star, Quote
+  CheckCircle, Smartphone, CreditCard, Send, Bell, Star, Quote,
+  Twitter, Linkedin, Instagram, Youtube, Facebook,
+  MapPin, Phone, Mail, ExternalLink, ChevronRight
 } from 'lucide-react';
 
 const features = [
@@ -584,21 +586,184 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <GTBLogo size={30} showText={true} textSize="sm" />
-            <p className="text-gtb-muted text-sm">© 2026 Grand Trust Bank. FDIC &amp; FCA regulated.</p>
-            <div className="flex gap-5 items-center">
-              {['Privacy', 'Terms', 'Support'].map(l => (
-                <a key={l} href="#" className="text-gtb-muted hover:text-white text-sm transition-colors">{l}</a>
+      <footer className="border-t border-white/[0.06] bg-gtb-card/30">
+
+        {/* Newsletter strip */}
+        <div className="border-b border-white/[0.06]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <h3 className="text-white font-bold text-lg mb-1">Stay ahead of your finances</h3>
+                <p className="text-gtb-muted text-sm">Market updates, product news and exclusive offers — no spam.</p>
+              </div>
+              <form className="flex gap-2 w-full md:w-auto" onSubmit={e => e.preventDefault()}>
+                <div className="relative flex-1 md:w-72">
+                  <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gtb-muted pointer-events-none" />
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="w-full bg-white/[0.05] border border-white/[0.10] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gtb-muted focus:outline-none focus:border-gtb-accent/50 transition-colors"
+                  />
+                </div>
+                <button className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap">Subscribe</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Main link grid */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10">
+
+            {/* Brand column */}
+            <div className="col-span-2 md:col-span-3 lg:col-span-2">
+              <GTBLogo size={38} showText={true} />
+              <p className="text-gtb-muted text-sm leading-relaxed mt-4 max-w-xs">
+                Grand Trust Bank brings world-class digital banking to individuals and businesses
+                across the US and Europe. Fast, secure, and built for the way you live.
+              </p>
+
+              {/* Social links */}
+              <div className="flex gap-3 mt-6">
+                {[
+                  { Icon: Twitter,   label: 'Twitter'   },
+                  { Icon: Linkedin,  label: 'LinkedIn'  },
+                  { Icon: Instagram, label: 'Instagram' },
+                  { Icon: Facebook,  label: 'Facebook'  },
+                  { Icon: Youtube,   label: 'YouTube'   },
+                ].map(({ Icon, label }) => (
+                  <a
+                    key={label}
+                    href="#"
+                    aria-label={label}
+                    className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-gtb-muted hover:text-gtb-accent hover:border-gtb-accent/30 hover:bg-gtb-accent/10 transition-all"
+                  >
+                    <Icon size={15} />
+                  </a>
+                ))}
+              </div>
+
+              {/* Contact block */}
+              <div className="mt-6 space-y-2">
+                {[
+                  { Icon: MapPin, text: '350 Fifth Avenue, New York, NY 10118' },
+                  { Icon: Phone,  text: '+1 (800) 482-7265' },
+                  { Icon: Mail,   text: 'support@grandtrustbank.com' },
+                ].map(({ Icon, text }) => (
+                  <div key={text} className="flex items-start gap-2.5 text-xs text-gtb-muted">
+                    <Icon size={13} className="text-gtb-accent mt-0.5 flex-shrink-0" />
+                    <span>{text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Products */}
+            <div>
+              <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-4">Products</h4>
+              <ul className="space-y-2.5">
+                {[
+                  'Checking Account', 'Savings Account', 'Virtual Cards',
+                  'Instant Transfers', 'International Payments',
+                  'Bill Payments', 'Crypto Trading', 'Business Loans',
+                ].map(item => (
+                  <li key={item}>
+                    <a href="#" className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
+                      <ChevronRight size={12} className="text-gtb-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
+                      {item}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-4">Company</h4>
+              <ul className="space-y-2.5">
+                {[
+                  'About Us', 'Careers', 'Press & Media', 'Blog',
+                  'Partners', 'Investor Relations', 'ESG Report',
+                ].map(item => (
+                  <li key={item}>
+                    <a href="#" className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
+                      <ChevronRight size={12} className="text-gtb-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
+                      {item}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Resources & Legal */}
+            <div>
+              <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-4">Resources</h4>
+              <ul className="space-y-2.5 mb-8">
+                {[
+                  { label: 'Help Center', ext: false },
+                  { label: 'Security',    ext: false },
+                  { label: 'API Docs',    ext: true  },
+                  { label: 'System Status', ext: true },
+                  { label: 'Community',   ext: false },
+                ].map(({ label, ext }) => (
+                  <li key={label}>
+                    <a href="#" className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
+                      <ChevronRight size={12} className="text-gtb-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
+                      {label}
+                      {ext && <ExternalLink size={10} className="text-gtb-muted/50 ml-auto" />}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-4">Legal</h4>
+              <ul className="space-y-2.5">
+                {['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Compliance'].map(item => (
+                  <li key={item}>
+                    <a href="#" className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
+                      <ChevronRight size={12} className="text-gtb-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
+                      {item}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Regulatory badges row */}
+        <div className="border-t border-white/[0.06]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex flex-wrap gap-3 justify-center md:justify-start mb-6">
+              {[
+                { label: 'FDIC Insured',       sub: 'Up to $250,000'     },
+                { label: 'FCA Regulated',      sub: 'Reg. No. 987654'    },
+                { label: '256-bit SSL',         sub: 'TLS 1.3 Encrypted'  },
+                { label: 'PCI DSS Level 1',    sub: 'Payment Security'   },
+                { label: 'SOC 2 Type II',      sub: 'Certified'          },
+              ].map(({ label, sub }) => (
+                <div key={label} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.07]">
+                  <Shield size={12} className="text-gtb-accent flex-shrink-0" />
+                  <div>
+                    <div className="text-white text-xs font-semibold leading-none">{label}</div>
+                    <div className="text-gtb-muted text-[10px] leading-none mt-0.5">{sub}</div>
+                  </div>
+                </div>
               ))}
-              <Link href="/admin/login" className="text-gtb-muted/40 hover:text-gtb-muted text-xs transition-colors">
-                Staff
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-5 border-t border-white/[0.06]">
+              <p className="text-gtb-muted text-xs text-center sm:text-left">
+                © 2026 Grand Trust Bank, Inc. All rights reserved. Grand Trust Bank is a registered financial institution.
+                Deposits insured by the FDIC. Banking services provided by Grand Trust Bank, N.A., Member FDIC.
+              </p>
+              <Link href="/admin/login" className="text-gtb-muted/30 hover:text-gtb-muted/60 text-xs transition-colors whitespace-nowrap">
+                Staff Portal
               </Link>
             </div>
           </div>
         </div>
+
       </footer>
     </div>
   );
