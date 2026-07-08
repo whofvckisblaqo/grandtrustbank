@@ -3,6 +3,7 @@ import { withAdminAuth } from '@/lib/withAdminAuth';
 import Loan from '@/models/Loan';
 import Account from '@/models/Account';
 import Transaction from '@/models/Transaction';
+import { sendLoanStatusEmail } from '@/lib/email';
 
 async function handler(req, { params }) {
   const { id } = params;
@@ -15,7 +16,6 @@ async function handler(req, { params }) {
     return NextResponse.json({ error: 'Only pending loans can be actioned' }, { status: 400 });
 
   if (action === 'approve') {
-    // Find target account
     const acctQuery = accountId
       ? Account.findOne({ _id: accountId, user: loan.user })
       : Account.findOne({ user: loan.user, status: 'active' });
@@ -46,6 +46,15 @@ async function handler(req, { params }) {
     loan.creditedAccount = account._id;
     await loan.save();
 
+    sendLoanStatusEmail({
+      to: loan.user.email,
+      name: `${loan.user.firstName} ${loan.user.lastName}`,
+      loanAmount: loan.amount,
+      currency: account.currency,
+      status: 'approved',
+      note: `Funds have been credited to your account ending in ${account.accountNumber.slice(-4)}.`,
+    }).catch((err) => console.error('[LOAN_APPROVED_EMAIL]', err));
+
     return NextResponse.json({ message: `Loan approved and $${loan.amount.toLocaleString()} credited` });
   }
 
@@ -54,6 +63,16 @@ async function handler(req, { params }) {
     loan.adminNotes = adminNotes || '';
     loan.rejectedAt = new Date();
     await loan.save();
+
+    sendLoanStatusEmail({
+      to: loan.user.email,
+      name: `${loan.user.firstName} ${loan.user.lastName}`,
+      loanAmount: loan.amount,
+      currency: loan.currency || 'USD',
+      status: 'declined',
+      note: adminNotes || undefined,
+    }).catch((err) => console.error('[LOAN_REJECTED_EMAIL]', err));
+
     return NextResponse.json({ message: 'Loan application rejected' });
   }
 

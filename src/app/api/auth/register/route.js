@@ -3,8 +3,8 @@ import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import Account from '@/models/Account';
 import Card from '@/models/Card';
-import { signToken } from '@/lib/auth';
-import { cookies } from 'next/headers';
+import bcrypt from 'bcryptjs';
+import { sendOtpEmail } from '@/lib/email';
 
 export async function POST(req) {
   try {
@@ -25,36 +25,39 @@ export async function POST(req) {
       return NextResponse.json({ error: `${field} is already registered` }, { status: 409 });
     }
 
-    const user = await User.create({ firstName, lastName, email, phone, password, dateOfBirth: new Date(dateOfBirth) });
+    // Generate 6-digit OTP, hashed before storage
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const otpHash = await bcrypt.hash(otp, 10);
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Create savings (primary) + checking accounts
+    const user = await User.create({
+      firstName, lastName, email, phone, password,
+      dateOfBirth: new Date(dateOfBirth),
+      isVerified: false,
+      otpCode: otpHash,
+      otpExpiresAt,
+    });
+
+    // Accounts and card are pre-created so they're ready the moment OTP is verified
     const [savings, checking] = await Promise.all([
       Account.create({ user: user._id, accountType: 'savings', isPrimary: true }),
       Account.create({ user: user._id, accountType: 'current', isPrimary: false }),
     ]);
 
-    // Auto-create a Visa debit card for savings
     const cardName = `${firstName} ${lastName}`.toUpperCase();
     await Card.create({ user: user._id, account: savings._id, cardType: 'debit', network: 'visa', cardName });
 
-    const token = signToken({ userId: user._id, email: user.email });
-    const cookieStore = await cookies();
-    cookieStore.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
+    sendOtpEmail({
+      to: user.email,
+      name: `${firstName} ${lastName}`,
+      otp,
+    }).catch((err) => console.error('[OTP_EMAIL]', err));
 
     return NextResponse.json(
       {
-        message: 'Account created successfully',
-        user: user.toJSON(),
-        accounts: [
-          { accountNumber: savings.accountNumber, accountType: 'savings', balance: 0, currency: 'USD' },
-          { accountNumber: checking.accountNumber, accountType: 'current', balance: 0, currency: 'USD' },
-        ],
+        message: 'Account created. Please verify your email with the code we sent.',
+        email: user.email,
+        requiresVerification: true,
       },
       { status: 201 }
     );

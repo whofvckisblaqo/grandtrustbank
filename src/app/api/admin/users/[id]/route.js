@@ -3,6 +3,7 @@ import { withAdminAuth } from '@/lib/withAdminAuth';
 import User from '@/models/User';
 import Account from '@/models/Account';
 import Transaction from '@/models/Transaction';
+import { sendDepositApprovedEmail, sendAccountStatusEmail } from '@/lib/email';
 
 async function getHandler(req, { params }) {
   try {
@@ -41,6 +42,17 @@ async function patchHandler(req, { params }) {
     if (action === 'suspend') {
       user.isSuspended = true;
       await user.save();
+
+      const accounts = await Account.find({ user: id, status: { $ne: 'closed' } });
+      for (const acct of accounts) {
+        sendAccountStatusEmail({
+          to: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          status: 'frozen',
+          accountNumber: acct.accountNumber,
+        }).catch((err) => console.error('[ACCOUNT_FROZEN_EMAIL]', err));
+      }
+
       return NextResponse.json({ message: 'User suspended' });
     }
 
@@ -48,6 +60,17 @@ async function patchHandler(req, { params }) {
       user.isSuspended = false;
       user.isActive    = true;
       await user.save();
+
+      const accounts = await Account.find({ user: id, status: { $ne: 'closed' } });
+      for (const acct of accounts) {
+        sendAccountStatusEmail({
+          to: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          status: 'unfrozen',
+          accountNumber: acct.accountNumber,
+        }).catch((err) => console.error('[ACCOUNT_UNFROZEN_EMAIL]', err));
+      }
+
       return NextResponse.json({ message: 'User activated' });
     }
 
@@ -84,6 +107,14 @@ async function patchHandler(req, { params }) {
         status:          'completed',
         channel:         'admin',
       });
+
+      sendDepositApprovedEmail({
+        to: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        amount,
+        currency: account.currency,
+        newBalance: account.balance,
+      }).catch((err) => console.error('[DEPOSIT_APPROVED_EMAIL]', err));
 
       return NextResponse.json({
         message:    `${fmt(amount)} credited to ${account.accountNumber}`,

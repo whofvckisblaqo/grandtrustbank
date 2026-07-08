@@ -4,6 +4,7 @@ import { withAuth } from '@/lib/withAuth';
 import Account from '@/models/Account';
 import Transaction from '@/models/Transaction';
 import { getTransactionCost } from '@/lib/fees';
+import { sendTransferPendingEmail, sendTransferSentEmail } from '@/lib/email';
 
 async function handler(req) {
   try {
@@ -52,6 +53,15 @@ async function handler(req) {
         metadata:      { transferType: 'external', externalDetails, toAccountNumber },
       });
 
+      sendTransferPendingEmail({
+        to: req.user.email,
+        name: `${req.user.firstName} ${req.user.lastName}`,
+        amount: parsedAmount,
+        currency: senderAccount.currency,
+        recipientName: externalDetails?.accountName || 'External Account',
+        reference: debitTxn.reference,
+      }).catch((err) => console.error('[TRANSFER_PENDING_EMAIL]', err));
+
       return NextResponse.json({
         message:   'External wire transfer submitted and awaiting admin approval',
         reference: debitTxn.reference,
@@ -98,7 +108,6 @@ async function handler(req) {
     const requiresApproval = !isOwnAccount;
 
     if (requiresApproval) {
-      // Create PENDING transactions — balances unchanged until admin approves
       const debitTxn = await Transaction.create({
         type:            'transfer',
         direction:       'debit',
@@ -136,6 +145,15 @@ async function handler(req) {
         status:          'pending',
         channel:         'web',
       });
+
+      sendTransferPendingEmail({
+        to: req.user.email,
+        name: `${req.user.firstName} ${req.user.lastName}`,
+        amount: parsedAmount,
+        currency: senderAccount.currency,
+        recipientName: `${receiverAccount.user.firstName} ${receiverAccount.user.lastName}`,
+        reference: debitTxn.reference,
+      }).catch((err) => console.error('[TRANSFER_PENDING_EMAIL]', err));
 
       return NextResponse.json({
         message:   'Transfer submitted and awaiting admin approval',
@@ -209,6 +227,16 @@ async function handler(req) {
       }], { session: dbSession });
 
       await dbSession.commitTransaction();
+
+      sendTransferSentEmail({
+        to: req.user.email,
+        name: `${req.user.firstName} ${req.user.lastName}`,
+        amount: parsedAmount,
+        currency: senderAccount.currency,
+        recipientName: `Your ${receiverAccount.accountType} account`,
+        accountNumber: senderAccount.accountNumber,
+        newBalance: senderAccount.balance,
+      }).catch((err) => console.error('[TRANSFER_SENT_EMAIL]', err));
 
       return NextResponse.json({
         message:    'Transfer completed successfully',

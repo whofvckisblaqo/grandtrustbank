@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, User, Mail, Phone, Calendar, Lock, AlertCircle, ArrowRight, CheckCircle, ChevronLeft } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Phone, Calendar, Lock, AlertCircle, ArrowRight, ChevronLeft } from 'lucide-react';
 import InputField from '@/components/InputField';
 
-const STEPS = ['Personal Info', 'Security', 'Done'];
+const STEPS = ['Personal Info', 'Security'];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -48,7 +48,7 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
-      setStep(2);
+      router.push(`/verify?email=${encodeURIComponent(form.email)}`);
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
@@ -70,35 +70,31 @@ export default function RegisterPage() {
   return (
     <div className="glass-card rounded-3xl p-8 sm:p-10 animate-slide-up" style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.6)' }}>
 
-      {step < 2 && (
-        <>
-          {/* Progress */}
-          <div className="flex items-center gap-2 mb-8">
-            {STEPS.slice(0, 2).map((label, i) => (
-              <div key={label} className="flex items-center gap-2 flex-1">
-                <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                  i < step ? 'bg-gtb-accent text-gtb-dark' :
-                  i === step ? 'bg-gtb-accent/20 border border-gtb-accent text-gtb-accent' :
-                  'bg-white/5 border border-white/10 text-gtb-muted'
-                }`}>
-                  {i < step ? <CheckCircle size={14} /> : i + 1}
-                </div>
-                <span className={`text-xs hidden sm:block ${i === step ? 'text-white' : 'text-gtb-muted'}`}>{label}</span>
-                {i < 1 && <div className={`flex-1 h-px transition-colors duration-500 ${i < step ? 'bg-gtb-accent' : 'bg-white/10'}`} />}
-              </div>
-            ))}
+      {/* Progress */}
+      <div className="flex items-center gap-2 mb-8">
+        {STEPS.map((label, i) => (
+          <div key={label} className="flex items-center gap-2 flex-1">
+            <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+              i < step ? 'bg-gtb-accent text-gtb-dark' :
+              i === step ? 'bg-gtb-accent/20 border border-gtb-accent text-gtb-accent' :
+              'bg-white/5 border border-white/10 text-gtb-muted'
+            }`}>
+              {i < step ? <CheckCircle size={14} /> : i + 1}
+            </div>
+            <span className={`text-xs hidden sm:block ${i === step ? 'text-white' : 'text-gtb-muted'}`}>{label}</span>
+            {i < STEPS.length - 1 && <div className={`flex-1 h-px transition-colors duration-500 ${i < step ? 'bg-gtb-accent' : 'bg-white/10'}`} />}
           </div>
+        ))}
+      </div>
 
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-black text-white mb-1">
-              {step === 0 ? 'Create your account' : 'Secure your account'}
-            </h1>
-            <p className="text-gtb-subtle text-sm">
-              {step === 0 ? 'Start your banking journey with GTB' : 'Set a strong password to protect your account'}
-            </p>
-          </div>
-        </>
-      )}
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-black text-white mb-1">
+          {step === 0 ? 'Create your account' : 'Secure your account'}
+        </h1>
+        <p className="text-gtb-subtle text-sm">
+          {step === 0 ? 'Start your banking journey with GTB' : 'Set a strong password to protect your account'}
+        </p>
+      </div>
 
       {/* Error */}
       {error && (
@@ -242,30 +238,12 @@ export default function RegisterPage() {
         </form>
       )}
 
-      {/* Step 2 — Success */}
-      {step === 2 && (
-        <div className="text-center py-4 animate-slide-up">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-            style={{ background: 'linear-gradient(135deg, rgba(0,224,184,0.2), rgba(0,201,167,0.1))', border: '2px solid rgba(0,224,184,0.3)', boxShadow: '0 0 40px rgba(0,224,184,0.2)' }}>
-            <CheckCircle size={36} className="text-gtb-accent" />
-          </div>
-          <h2 className="text-2xl font-black text-white mb-2">Account Created!</h2>
-          <p className="text-gtb-subtle mb-2">Welcome to Grand Trust Bank, <span className="text-white font-semibold">{form.firstName}</span>.</p>
-          <p className="text-gtb-subtle text-sm mb-8">Your savings account has been opened. Start banking right away.</p>
-          <button onClick={() => router.push('/dashboard')} className="btn-primary w-full justify-center text-base py-3.5">
-            Go to Dashboard <ArrowRight size={16} />
-          </button>
-        </div>
-      )}
-
-      {step < 2 && (
-        <div className="mt-6 text-center">
-          <p className="text-gtb-muted text-sm">
-            Already have an account?{' '}
-            <Link href="/login" className="text-gtb-accent hover:underline font-medium">Sign in</Link>
-          </p>
-        </div>
-      )}
+      <div className="mt-6 text-center">
+        <p className="text-gtb-muted text-sm">
+          Already have an account?{' '}
+          <Link href="/login" className="text-gtb-accent hover:underline font-medium">Sign in</Link>
+        </p>
+      </div>
     </div>
   );
 }

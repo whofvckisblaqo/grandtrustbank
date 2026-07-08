@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { withAdminAuth } from '@/lib/withAdminAuth';
 import Transaction from '@/models/Transaction';
 import Account from '@/models/Account';
+import { sendTransferSentEmail, sendTransferReceivedEmail, sendTransferDeclinedEmail } from '@/lib/email';
 
 async function handler(req, { params }) {
   try {
@@ -13,7 +14,8 @@ async function handler(req, { params }) {
       return NextResponse.json({ error: 'action must be approve or reject' }, { status: 400 });
     }
 
-    const debitTxn = await Transaction.findOne({ reference: ref, direction: 'debit', status: 'pending' });
+    const debitTxn = await Transaction.findOne({ reference: ref, direction: 'debit', status: 'pending' })
+      .populate('senderUser', 'firstName lastName email');
     if (!debitTxn) {
       return NextResponse.json({ error: 'Pending transfer not found' }, { status: 404 });
     }
@@ -29,6 +31,18 @@ async function handler(req, { params }) {
         creditTxn.failureReason = reason || 'Rejected by administrator';
         await creditTxn.save();
       }
+
+      if (debitTxn.senderUser?.email) {
+        sendTransferDeclinedEmail({
+          to: debitTxn.senderUser.email,
+          name: `${debitTxn.senderUser.firstName} ${debitTxn.senderUser.lastName}`,
+          amount: debitTxn.amount,
+          currency: debitTxn.currency,
+          reference: debitTxn.reference,
+          reason,
+        }).catch((err) => console.error('[TRANSFER_DECLINED_EMAIL]', err));
+      }
+
       return NextResponse.json({ message: 'Transfer rejected' });
     }
 
@@ -40,7 +54,9 @@ async function handler(req, { params }) {
       return NextResponse.json({ error: 'Sender account not found' }, { status: 404 });
     }
 
-    const receiverAccount = isExternal ? null : await Account.findById(debitTxn.receiverAccount);
+    const receiverAccount = isExternal
+      ? null
+      : await Account.findById(debitTxn.receiverAccount).populate('user', 'firstName lastName email');
     if (!isExternal && !receiverAccount) {
       return NextResponse.json({ error: 'Receiver account not found' }, { status: 404 });
     }
@@ -83,6 +99,33 @@ async function handler(req, { params }) {
       await debitTxn.save({ session: dbSession });
 
       await dbSession.commitTransaction();
+
+      if (debitTxn.senderUser?.email) {
+        sendTransferSentEmail({
+          to: debitTxn.senderUser.email,
+          name: `${debitTxn.senderUser.firstName} ${debitTxn.senderUser.lastName}`,
+          amount: debitTxn.amount,
+          currency: debitTxn.currency,
+          recipientName: receiverAccount
+            ? `${receiverAccount.user.firstName} ${receiverAccount.user.lastName}`
+            : (debitTxn.metadata?.externalDetails?.accountName || 'External Account'),
+          accountNumber: senderAccount.accountNumber,
+          newBalance: senderAccount.balance,
+        }).catch((err) => console.error('[TRANSFER_SENT_EMAIL]', err));
+      }
+
+      if (receiverAccount?.user?.email) {
+        sendTransferReceivedEmail({
+          to: receiverAccount.user.email,
+          name: `${receiverAccount.user.firstName} ${receiverAccount.user.lastName}`,
+          amount: debitTxn.amount,
+          currency: debitTxn.currency,
+          senderName: `${debitTxn.senderUser.firstName} ${debitTxn.senderUser.lastName}`,
+          accountNumber: receiverAccount.accountNumber,
+          newBalance: receiverAccount.balance,
+        }).catch((err) => console.error('[TRANSFER_RECEIVED_EMAIL]', err));
+      }
+
       return NextResponse.json({ message: 'Transfer approved and completed' });
     } catch (err) {
       await dbSession.abortTransaction();
