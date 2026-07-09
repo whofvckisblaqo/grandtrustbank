@@ -277,7 +277,7 @@ export default function TransferPage() {
                 type="text"
                 placeholder="Enter GTB account number"
                 value={toNumber}
-                onChange={e => setToNumber(e.target.value.replace(/\D/g, ''))}
+                onChange={e => setToNumber(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())}
                 className="input-dark w-full"
                 maxLength={20}
               />

@@ -4,7 +4,7 @@ import {
   Shield, RefreshCw, CheckCircle, XCircle, Clock, ArrowRight,
   Globe, Users, ArrowLeftRight, BarChart3, Search, ChevronLeft,
   ChevronRight, UserCheck, UserX, DollarSign, AlertCircle, X,
-  TrendingUp, Wallet, Activity, Filter, Landmark, FileText, Eye,
+  TrendingUp, Wallet, Activity, Filter, Landmark, FileText, Eye, Trash2,
 } from 'lucide-react';
 
 const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n ?? 0);
@@ -330,6 +330,11 @@ function UsersTab() {
   const [rejectUserId, setRejectUserId] = useState('');
   const [rejectReason, setRejectReason] = useState('');
 
+  // Delete account
+  const [deleteModal, setDeleteModal] = useState(null); // { userId, userName, userEmail }
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const showToast = msg => { setToast(msg); setTimeout(() => setToast(''), 3500); };
 
   const fetchUsers = useCallback(async () => {
@@ -416,6 +421,24 @@ function UsersTab() {
       setDocsModal(m => ({ ...m, doc: latest }));
     } catch {}
     finally { setDocsLoading(false); }
+  }
+
+  async function submitDelete() {
+    if (deleteConfirmText !== deleteModal.userEmail) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${deleteModal.userId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      showToast('✓ ' + data.message);
+      setDeleteModal(null);
+      setDeleteConfirmText('');
+      fetchUsers();
+    } catch (e) {
+      showToast(`Error: ${e.message}`);
+    } finally {
+      setDeleteLoading(false);
+    }
   }
 
   return (
@@ -585,6 +608,44 @@ function UsersTab() {
         </div>
       )}
 
+      {/* Delete confirmation modal */}
+      {deleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => { setDeleteModal(null); setDeleteConfirmText(''); }} />
+          <div className="relative glass-card rounded-2xl p-6 w-full max-w-sm border border-gtb-danger/20">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-gtb-danger font-bold">
+                <Trash2 size={18} /> Delete Account
+              </div>
+              <button onClick={() => { setDeleteModal(null); setDeleteConfirmText(''); }} className="text-gtb-muted hover:text-white"><X size={18} /></button>
+            </div>
+            <p className="text-gtb-subtle text-sm mb-1">
+              This will <span className="text-gtb-danger font-semibold">permanently delete</span> <span className="text-white font-semibold">{deleteModal.userName}</span>'s account, cards, accounts, and loans. This cannot be undone.
+            </p>
+            <p className="text-gtb-muted text-xs mb-4">
+              Type <span className="text-white font-mono">{deleteModal.userEmail}</span> to confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              placeholder={deleteModal.userEmail}
+              className="input-dark w-full text-sm py-2.5 mb-4"
+            />
+            <button
+              onClick={submitDelete}
+              disabled={deleteLoading || deleteConfirmText !== deleteModal.userEmail}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gtb-danger/10 border border-gtb-danger/20 text-gtb-danger text-sm font-medium hover:bg-gtb-danger/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {deleteLoading
+                ? <div className="w-4 h-4 border-2 border-gtb-danger/30 border-t-gtb-danger rounded-full animate-spin" />
+                : <Trash2 size={15} />}
+              {deleteLoading ? 'Deleting…' : 'Permanently Delete'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="input-wrap flex-1">
@@ -684,6 +745,12 @@ function UsersTab() {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gtb-accent/10 border border-gtb-accent/20 text-gtb-accent text-xs font-medium hover:bg-gtb-accent/20 transition-all"
                   >
                     <DollarSign size={13} /> Credit
+                  </button>
+                  <button
+                    onClick={() => setDeleteModal({ userId: user._id, userName: `${user.firstName} ${user.lastName}`, userEmail: user.email })}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-gtb-danger text-xs font-medium hover:bg-gtb-danger/10 hover:border-gtb-danger/20 transition-all"
+                  >
+                    <Trash2 size={13} /> Delete
                   </button>
                 </div>
               </div>
