@@ -4,7 +4,7 @@ import {
   Shield, RefreshCw, CheckCircle, XCircle, Clock, ArrowRight,
   Globe, Users, ArrowLeftRight, BarChart3, Search, ChevronLeft,
   ChevronRight, UserCheck, UserX, DollarSign, AlertCircle, X,
-  TrendingUp, Wallet, Activity, Filter, Landmark, FileText,
+  TrendingUp, Wallet, Activity, Filter, Landmark, FileText, Eye,
 } from 'lucide-react';
 
 const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n ?? 0);
@@ -24,8 +24,10 @@ function timeAgo(date) {
 
 const typeLabel = t => ({ savings: 'Savings', current: 'Checking', 'fixed-deposit': 'Fixed Deposit', domiciliary: 'Domiciliary' }[t] || t);
 
-const kycColors = { pending: '#F59E0B', verified: '#22C55E', rejected: '#EF4444' };
-const kycLabels = { pending: 'Pending KYC', verified: 'Verified', rejected: 'Rejected' };
+const kycColors = { pending: '#F59E0B', verified: '#22C55E', rejected: '#EF4444', not_submitted: '#64748b' };
+const kycLabels = { pending: 'Pending KYC', verified: 'Verified', rejected: 'Rejected', not_submitted: 'Not Submitted' };
+
+const idTypeLabels = { passport: 'Passport', drivers_license: "Driver's License", national_id: 'National ID' };
 
 function TabBtn({ label, active, onClick, badge }) {
   return (
@@ -322,6 +324,12 @@ function UsersTab() {
   const [creditError, setCreditError] = useState('');
   const [acctLoading, setAcctLoading] = useState(false);
 
+  // KYC document viewer
+  const [docsModal, setDocsModal]     = useState(null); // { userId, userName, kycStatus, doc }
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [rejectUserId, setRejectUserId] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
+
   const showToast = msg => { setToast(msg); setTimeout(() => setToast(''), 3500); };
 
   const fetchUsers = useCallback(async () => {
@@ -341,17 +349,20 @@ function UsersTab() {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
-  async function doAction(userId, action) {
+  async function doAction(userId, action, reason) {
     setActing(userId + action);
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ action }),
+        body:    JSON.stringify({ action, reason }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       showToast(data.message);
+      setDocsModal(null);
+      setRejectUserId('');
+      setRejectReason('');
       fetchUsers();
     } catch (e) { showToast(`Error: ${e.message}`); }
     finally { setActing(''); }
@@ -392,6 +403,19 @@ function UsersTab() {
       fetchUsers();
     } catch (e) { setCreditError(e.message); }
     finally { setCreditLoading(false); }
+  }
+
+  async function openDocsModal(user) {
+    setDocsModal({ userId: user._id, userName: `${user.firstName} ${user.lastName}`, kycStatus: user.kycStatus, doc: null });
+    setDocsLoading(true);
+    try {
+      const res  = await fetch(`/api/admin/users/${user._id}`);
+      const data = await res.json();
+      const docs = data.user?.kycDocuments || [];
+      const latest = docs.length ? docs[docs.length - 1] : null;
+      setDocsModal(m => ({ ...m, doc: latest }));
+    } catch {}
+    finally { setDocsLoading(false); }
   }
 
   return (
@@ -454,6 +478,109 @@ function UsersTab() {
                 }
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* KYC document viewer modal */}
+      {docsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => { setDocsModal(null); setRejectUserId(''); setRejectReason(''); }} />
+          <div className="relative glass-card rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="text-white font-bold">Identity Documents</div>
+                <div className="text-gtb-muted text-sm">{docsModal.userName}</div>
+              </div>
+              <button onClick={() => { setDocsModal(null); setRejectUserId(''); setRejectReason(''); }} className="text-gtb-muted hover:text-white"><X size={18} /></button>
+            </div>
+
+            {docsLoading ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="glass rounded-xl h-48 shimmer" />
+                <div className="glass rounded-xl h-48 shimmer" />
+              </div>
+            ) : !docsModal.doc ? (
+              <div className="glass rounded-xl p-10 text-center">
+                <FileText size={32} className="text-gtb-muted mx-auto mb-3" />
+                <p className="text-gtb-muted text-sm">No identity documents have been submitted yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-1 rounded-full bg-gtb-accent/10 border border-gtb-accent/20 text-gtb-accent text-xs font-semibold">
+                    {idTypeLabels[docsModal.doc.idType] || docsModal.doc.idType}
+                  </span>
+                  <span className="text-gtb-muted text-xs">Submitted {timeAgo(docsModal.doc.submittedAt)}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-gtb-muted text-[10px] uppercase tracking-wider mb-2">Front</div>
+                    <a href={docsModal.doc.frontImageUrl} target="_blank" rel="noopener noreferrer">
+                      <img src={docsModal.doc.frontImageUrl} alt="ID front" className="w-full rounded-xl border border-white/10 object-cover" />
+                    </a>
+                  </div>
+                  <div>
+                    <div className="text-gtb-muted text-[10px] uppercase tracking-wider mb-2">Back</div>
+                    <a href={docsModal.doc.backImageUrl} target="_blank" rel="noopener noreferrer">
+                      <img src={docsModal.doc.backImageUrl} alt="ID back" className="w-full rounded-xl border border-white/10 object-cover" />
+                    </a>
+                  </div>
+                </div>
+
+                {docsModal.doc.rejectionReason && (
+                  <div className="text-gtb-danger text-xs glass rounded-lg px-3 py-2">
+                    Previous rejection reason: {docsModal.doc.rejectionReason}
+                  </div>
+                )}
+
+                {docsModal.kycStatus === 'pending' && (
+                  <>
+                    {rejectUserId === docsModal.userId ? (
+                      <div className="space-y-2 pt-2">
+                        <input
+                          type="text"
+                          placeholder="Rejection reason (optional)"
+                          value={rejectReason}
+                          onChange={e => setRejectReason(e.target.value)}
+                          className="input-dark w-full text-sm py-2"
+                        />
+                        <div className="flex gap-2">
+                          <button onClick={() => { setRejectUserId(''); setRejectReason(''); }} className="btn-ghost flex-1 justify-center text-sm py-2">Cancel</button>
+                          <button
+                            onClick={() => doAction(docsModal.userId, 'reject_kyc', rejectReason)}
+                            disabled={acting === docsModal.userId + 'reject_kyc'}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gtb-danger/10 border border-gtb-danger/20 text-gtb-danger text-sm font-medium hover:bg-gtb-danger/20 transition-all disabled:opacity-50"
+                          >
+                            <UserX size={15} /> Confirm Reject
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          onClick={() => setRejectUserId(docsModal.userId)}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gtb-danger/10 border border-gtb-danger/20 text-gtb-danger text-sm font-medium hover:bg-gtb-danger/20 transition-all"
+                        >
+                          <UserX size={16} /> Reject KYC
+                        </button>
+                        <button
+                          onClick={() => doAction(docsModal.userId, 'approve_kyc')}
+                          disabled={acting === docsModal.userId + 'approve_kyc'}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gtb-success/10 border border-gtb-success/20 text-gtb-success text-sm font-medium hover:bg-gtb-success/20 transition-all disabled:opacity-50"
+                        >
+                          {acting === docsModal.userId + 'approve_kyc'
+                            ? <div className="w-4 h-4 border-2 border-gtb-success/30 border-t-gtb-success rounded-full animate-spin" />
+                            : <UserCheck size={16} />}
+                          Approve KYC
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -527,23 +654,13 @@ function UsersTab() {
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2 flex-shrink-0">
-                  {user.kycStatus === 'pending' && (
-                    <>
-                      <button
-                        onClick={() => doAction(user._id, 'approve_kyc')}
-                        disabled={acting === user._id + 'approve_kyc'}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gtb-success/10 border border-gtb-success/20 text-gtb-success text-xs font-medium hover:bg-gtb-success/20 transition-all disabled:opacity-50"
-                      >
-                        <UserCheck size={13} /> Approve KYC
-                      </button>
-                      <button
-                        onClick={() => doAction(user._id, 'reject_kyc')}
-                        disabled={acting === user._id + 'reject_kyc'}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gtb-danger/10 border border-gtb-danger/20 text-gtb-danger text-xs font-medium hover:bg-gtb-danger/20 transition-all disabled:opacity-50"
-                      >
-                        <UserX size={13} /> Reject KYC
-                      </button>
-                    </>
+                  {user.kycStatus !== 'not_submitted' && (
+                    <button
+                      onClick={() => openDocsModal(user)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-gtb-subtle text-xs font-medium hover:text-white hover:bg-white/10 transition-all"
+                    >
+                      <Eye size={13} /> View ID
+                    </button>
                   )}
                   {user.isSuspended ? (
                     <button
