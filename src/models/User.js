@@ -26,6 +26,9 @@ const userSchema = new mongoose.Schema(
     ],
     isActive:  { type: Boolean, default: true },
     isSuspended: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
+    otpCode: { type: String, select: false },
+    otpExpiresAt: { type: Date, select: false },
     lastLogin: { type: Date },
     loginAttempts: { type: Number, default: 0 },
     lockUntil:   { type: Date },
@@ -70,6 +73,8 @@ userSchema.set('toJSON', {
     delete obj.password;
     delete obj.pin;
     delete obj.twoFactorSecret;
+    delete obj.otpCode;
+    delete obj.otpExpiresAt;
     return obj;
   },
 });

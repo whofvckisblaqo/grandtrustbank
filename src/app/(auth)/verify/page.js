@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { ShieldCheck, AlertCircle } from 'lucide-react';
 
 function VerifyOtpForm() {
   const router = useRouter();
@@ -79,62 +80,75 @@ function VerifyOtpForm() {
 
   if (!email) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A2540] px-4">
-        <div className="bg-white rounded-lg p-8 max-w-md w-full text-center">
-          <p className="text-gray-700">
-            No email address found. Please{' '}
-            <a href="/register" className="text-[#0A2540] font-semibold underline">
-              sign up
-            </a>{' '}
-            first.
-          </p>
-        </div>
+      <div className="glass-card rounded-3xl p-8 sm:p-10 animate-slide-up text-center" style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.6)' }}>
+        <p className="text-gtb-subtle text-sm">
+          No email address found. Please{' '}
+          <a href="/register" className="text-gtb-accent underline font-medium">sign up</a> first.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0A2540] px-4">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full">
-        <h1 className="text-2xl font-bold text-[#0A2540] mb-2">Verify Your Email</h1>
-        <p className="text-gray-600 mb-6">
-          We sent a 6-digit code to <strong>{email}</strong>. Enter it below to activate your account.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            inputMode="numeric"
-            maxLength={6}
-            value={otp}
-            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-            placeholder="000000"
-            className="w-full text-center text-3xl tracking-[0.5em] font-bold py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A2540]"
-            autoFocus
-          />
-
-          {error && <p className="text-red-600 text-sm text-center">{error}</p>}
-          {resendMessage && <p className="text-green-600 text-sm text-center">{resendMessage}</p>}
-
-          <button
-            type="submit"
-            disabled={loading || otp.length !== 6}
-            className="w-full bg-[#0A2540] text-white py-3 rounded-lg font-semibold disabled:opacity-50 hover:bg-[#0A2540]/90 transition"
-          >
-            {loading ? 'Verifying...' : 'Verify Account'}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center text-sm text-gray-500">
-          Didn't get a code?{' '}
-          <button
-            onClick={handleResend}
-            disabled={resending || cooldown > 0}
-            className="text-[#0A2540] font-semibold underline disabled:opacity-50 disabled:no-underline"
-          >
-            {cooldown > 0 ? `Resend in ${cooldown}s` : resending ? 'Sending...' : 'Resend code'}
-          </button>
+    <div className="glass-card rounded-3xl p-8 sm:p-10 animate-slide-up" style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.6)' }}>
+      <div className="text-center mb-8">
+        <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+          style={{ background: 'rgba(0,224,184,0.12)', border: '1px solid rgba(0,224,184,0.3)' }}>
+          <ShieldCheck size={24} className="text-gtb-accent" />
         </div>
+        <h1 className="text-2xl font-black text-white mb-1">Verify Your Email</h1>
+        <p className="text-gtb-subtle text-sm">
+          We sent a 6-digit code to <span className="text-white font-medium">{email}</span>
+        </p>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-3 p-4 rounded-xl mb-6 badge-danger animate-fade-in">
+          <AlertCircle size={16} className="shrink-0" />
+          <span className="text-sm">{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="text"
+          inputMode="numeric"
+          maxLength={6}
+          value={otp}
+          onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+          placeholder="000000"
+          className="input-dark w-full text-center text-3xl tracking-[0.5em] font-bold py-4"
+          style={{ color: '#ffffff', caretColor: '#00E0B8' }}
+          autoFocus
+        />
+
+        {resendMessage && <p className="text-gtb-success text-sm text-center">{resendMessage}</p>}
+
+        <button
+          type="submit"
+          disabled={loading || otp.length !== 6}
+          className="btn-primary w-full justify-center text-base py-3.5 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-gtb-dark/30 border-t-gtb-dark rounded-full animate-spin" />
+              Verifying...
+            </span>
+          ) : (
+            'Verify Account'
+          )}
+        </button>
+      </form>
+
+      <div className="mt-6 text-center text-sm">
+        <span className="text-gtb-muted">Didn't get a code? </span>
+        <button
+          onClick={handleResend}
+          disabled={resending || cooldown > 0}
+          className="text-gtb-accent hover:underline font-medium disabled:opacity-50 disabled:no-underline"
+        >
+          {cooldown > 0 ? `Resend in ${cooldown}s` : resending ? 'Sending...' : 'Resend code'}
+        </button>
       </div>
     </div>
   );
@@ -142,7 +156,7 @@ function VerifyOtpForm() {
 
 export default function VerifyOtpPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0A2540]" />}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <VerifyOtpForm />
     </Suspense>
   );

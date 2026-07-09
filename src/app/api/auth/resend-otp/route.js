@@ -10,7 +10,7 @@ export async function POST(req) {
     const { email } = await req.json();
     if (!email) return NextResponse.json({ error: 'Email is required' }, { status: 400 });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+otpCode +otpExpiresAt');
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
     if (user.isVerified) return NextResponse.json({ error: 'Account already verified' }, { status: 400 });
 

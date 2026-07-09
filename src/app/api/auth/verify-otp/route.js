@@ -17,7 +17,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Email and code are required' }, { status: 400 });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+otpCode +otpExpiresAt');
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
