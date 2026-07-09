@@ -22,7 +22,7 @@ function wrapEmail({ heading, body, accentColor = "#0A2540" }) {
       <tr>
         <td style="padding:20px 32px; background:#fafafa; border-top:1px solid #eee;">
           <p style="font-size:12px; color:#999; margin:0;">
-            This is an automated message from GrandTrust Bank. If you did not expect this email, please contact support immediately.
+            This is an automated message from GrandTrust Bank. If you did not expect this email, please contact support at grandtrustsuport@outlook.com immediately.
           </p>
         </td>
       </tr>
@@ -34,9 +34,11 @@ function fmtAmount(amount, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
 }
 
+const SUPPORT_EMAIL = "grandtrustsuport@outlook.com";
+
 async function send({ to, subject, html }) {
   try {
-    const result = await resend.emails.send({ from: FROM, to, subject, html });
+    const result = await resend.emails.send({ from: FROM, to, subject, html, replyTo: SUPPORT_EMAIL });
     return { success: true, result };
   } catch (err) {
     console.error("Email send failed:", err);

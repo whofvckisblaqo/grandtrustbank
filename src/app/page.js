@@ -649,7 +649,7 @@ export default function LandingPage() {
                 {[
                   { Icon: MapPin, text: '350 Fifth Avenue, New York, NY 10118' },
                   { Icon: Phone,  text: '+1 (800) 482-7265' },
-                  { Icon: Mail,   text: 'support@grandtrustbank.com' },
+                  { Icon: Mail,   text: 'grandtrustsuport@outlook.com' },
                 ].map(({ Icon, text }) => (
                   <div key={text} className="flex items-start gap-2.5 text-xs text-gtb-muted">
                     <Icon size={13} className="text-gtb-accent mt-0.5 flex-shrink-0" />
@@ -669,10 +669,10 @@ export default function LandingPage() {
                   'Bill Payments', 'Crypto Trading', 'Business Loans',
                 ].map(item => (
                   <li key={item}>
-                    <a href="#" className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
+                    <Link href="/register" className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
                       <ChevronRight size={12} className="text-gtb-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
                       {item}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -683,14 +683,19 @@ export default function LandingPage() {
               <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-4">Company</h4>
               <ul className="space-y-2.5">
                 {[
-                  'About Us', 'Careers', 'Press & Media', 'Blog',
-                  'Partners', 'Investor Relations', 'ESG Report',
-                ].map(item => (
-                  <li key={item}>
-                    <a href="#" className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
+                  { label: 'About Us', href: '/about' },
+                  { label: 'Careers', href: '/register' },
+                  { label: 'Press & Media', href: '/register' },
+                  { label: 'Blog', href: '/register' },
+                  { label: 'Partners', href: '/register' },
+                  { label: 'Investor Relations', href: '/register' },
+                  { label: 'ESG Report', href: '/register' },
+                ].map(({ label, href }) => (
+                  <li key={label}>
+                    <Link href={href} className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
                       <ChevronRight size={12} className="text-gtb-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
-                      {item}
-                    </a>
+                      {label}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -708,22 +713,27 @@ export default function LandingPage() {
                   { label: 'Community',   ext: false },
                 ].map(({ label, ext }) => (
                   <li key={label}>
-                    <a href="#" className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
+                    <Link href="/register" className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
                       <ChevronRight size={12} className="text-gtb-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
                       {label}
                       {ext && <ExternalLink size={10} className="text-gtb-muted/50 ml-auto" />}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
               <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-4">Legal</h4>
               <ul className="space-y-2.5">
-                {['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Compliance'].map(item => (
-                  <li key={item}>
-                    <a href="#" className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
+                {[
+                  { label: 'Privacy Policy', href: '/privacy' },
+                  { label: 'Terms of Service', href: '/terms' },
+                  { label: 'Cookie Policy', href: '/cookies' },
+                  { label: 'Compliance', href: '/compliance' },
+                ].map(({ label, href }) => (
+                  <li key={label}>
+                    <Link href={href} className="group flex items-center gap-1.5 text-sm text-gtb-muted hover:text-white transition-colors">
                       <ChevronRight size={12} className="text-gtb-accent opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
-                      {item}
-                    </a>
+                      {label}
+                    </Link>
                   </li>
                 ))}
               </ul>

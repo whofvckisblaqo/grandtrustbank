@@ -130,7 +130,11 @@ export function MobileNav({ onLogout }) {
     </div>
   );
 }
+
 export function MobileMenuDrawer({ open, onClose, onLogout }) {
+  const kycStatus = useKycStatus();
+  const kycUnverified = kycStatus && kycStatus !== 'verified';
+
   if (!open) return null;
   return (
     <div className="lg:hidden fixed inset-0 z-[60]">
