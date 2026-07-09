@@ -130,14 +130,10 @@ export function MobileNav({ onLogout }) {
     </div>
   );
 }
-
 export function MobileMenuDrawer({ open, onClose, onLogout }) {
-  const kycStatus = useKycStatus();
-  const kycUnverified = kycStatus && kycStatus !== 'verified';
-
   if (!open) return null;
   return (
-    <div className="lg:hidden fixed inset-0 z-50">
+    <div className="lg:hidden fixed inset-0 z-[60]">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="absolute left-0 top-0 bottom-0 w-72 bg-gtb-card border-r border-white/[0.06] flex flex-col animate-slide-up">
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/[0.06]">
