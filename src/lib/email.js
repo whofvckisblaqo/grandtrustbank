@@ -238,3 +238,20 @@ export async function sendOtpEmail({ to, name, otp }) {
   });
   return send({ to, subject: "Your GrandTrust Bank Verification Code", html });
 }
+
+// ---------- 12. KYC status ----------
+export async function sendKycStatusEmail({ to, name, status, reason }) {
+  // status: "verified" | "rejected"
+  const html = wrapEmail({
+    heading: status === "verified" ? "Identity Verified" : "Identity Verification Failed",
+    body: `
+      <p>Hi ${name}, your identity verification (KYC) submission has been <strong>${status === "verified" ? "approved" : "rejected"}</strong>.</p>
+      ${status === "verified"
+        ? "<p>Your account now has full access to all GrandTrust Bank features.</p>"
+        : `${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ""}<p>Please resubmit a clear photo of your ID from your dashboard.</p>`
+      }
+    `,
+    accentColor: status === "verified" ? "#0F5132" : "#7A1F1F",
+  });
+  return send({ to, subject: `Identity Verification ${status === "verified" ? "Approved" : "Rejected"} - GrandTrust Bank`, html });
+}

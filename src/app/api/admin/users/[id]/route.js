@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { withAdminAuth } from '@/lib/withAdminAuth';
 import User from '@/models/User';
 import Account from '@/models/Account';
+import Card from '@/models/Card';
+import Loan from '@/models/Loan';
 import Transaction from '@/models/Transaction';
-import { sendDepositApprovedEmail, sendAccountStatusEmail } from '@/lib/email';
+import { sendDepositApprovedEmail, sendAccountStatusEmail, sendKycStatusEmail } from '@/lib/email';
 
 async function getHandler(req, { params }) {
   try {
@@ -22,20 +24,43 @@ async function patchHandler(req, { params }) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { action, creditAmount, accountId } = body;
+    const { action, creditAmount, accountId, reason } = body;
 
     const user = await User.findById(id);
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     if (action === 'approve_kyc') {
       user.kycStatus = 'verified';
+      if (user.kycDocuments.length > 0) {
+        user.kycDocuments[user.kycDocuments.length - 1].reviewedAt = new Date();
+      }
       await user.save();
+
+      sendKycStatusEmail({
+        to: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        status: 'verified',
+      }).catch((err) => console.error('[KYC_APPROVED_EMAIL]', err));
+
       return NextResponse.json({ message: 'KYC approved' });
     }
 
     if (action === 'reject_kyc') {
       user.kycStatus = 'rejected';
+      if (user.kycDocuments.length > 0) {
+        const lastDoc = user.kycDocuments[user.kycDocuments.length - 1];
+        lastDoc.reviewedAt = new Date();
+        lastDoc.rejectionReason = reason || '';
+      }
       await user.save();
+
+      sendKycStatusEmail({
+        to: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        status: 'rejected',
+        reason,
+      }).catch((err) => console.error('[KYC_REJECTED_EMAIL]', err));
+
       return NextResponse.json({ message: 'KYC rejected' });
     }
 
@@ -129,9 +154,57 @@ async function patchHandler(req, { params }) {
   }
 }
 
+async function deleteHandler(req, { params }) {
+  try {
+    const { id } = await params;
+
+    const user = await User.findById(id);
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    const accounts = await Account.find({ user: id });
+    const accountIds = accounts.map((a) => a._id);
+
+    // Transactions where this user was BOTH sender and receiver (e.g. admin credits,
+    // own-account transfers) are safe to fully delete.
+    await Transaction.deleteMany({
+      $and: [
+        { $or: [{ senderUser: id }, { senderUser: null }] },
+        { $or: [{ receiverUser: id }, { receiverUser: null }] },
+        { $or: [{ senderAccount: { $in: accountIds } }, { senderAccount: null }] },
+        { $or: [{ receiverAccount: { $in: accountIds } }, { receiverAccount: null }] },
+      ],
+    });
+
+    // For transactions involving another party, keep the record for the other user's
+    // history but strip this user's identifying references.
+    await Transaction.updateMany(
+      { senderUser: id },
+      { $set: { senderUser: null, senderAccount: null } }
+    );
+    await Transaction.updateMany(
+      { receiverUser: id },
+      { $set: { receiverUser: null, receiverAccount: null } }
+    );
+
+    await Promise.all([
+      Card.deleteMany({ user: id }),
+      Account.deleteMany({ user: id }),
+      Loan.deleteMany({ user: id }),
+    ]);
+
+    await User.findByIdAndDelete(id);
+
+    return NextResponse.json({ message: 'User and all associated data permanently deleted' });
+  } catch (err) {
+    console.error('[ADMIN/USERS/DELETE]', err);
+    return NextResponse.json({ error: 'Failed to delete user. Please try again.' }, { status: 500 });
+  }
+}
+
 function fmt(n) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 }
 
-export const GET   = withAdminAuth(getHandler);
-export const PATCH = withAdminAuth(patchHandler);
+export const GET    = withAdminAuth(getHandler);
+export const PATCH  = withAdminAuth(patchHandler);
+export const DELETE = withAdminAuth(deleteHandler);
