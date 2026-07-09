@@ -6,6 +6,8 @@ import Transaction from '@/models/Transaction';
 import { getTransactionCost } from '@/lib/fees';
 import { sendTransferPendingEmail, sendTransferSentEmail } from '@/lib/email';
 
+export const maxDuration = 30;
+
 async function handler(req) {
   try {
     const body = await req.json();
@@ -53,14 +55,18 @@ async function handler(req) {
         metadata:      { transferType: 'external', externalDetails, toAccountNumber },
       });
 
-      sendTransferPendingEmail({
-        to: req.user.email,
-        name: `${req.user.firstName} ${req.user.lastName}`,
-        amount: parsedAmount,
-        currency: senderAccount.currency,
-        recipientName: externalDetails?.accountName || 'External Account',
-        reference: debitTxn.reference,
-      }).catch((err) => console.error('[TRANSFER_PENDING_EMAIL]', err));
+      try {
+        await sendTransferPendingEmail({
+          to: req.user.email,
+          name: `${req.user.firstName} ${req.user.lastName}`,
+          amount: parsedAmount,
+          currency: senderAccount.currency,
+          recipientName: externalDetails?.accountName || 'External Account',
+          reference: debitTxn.reference,
+        });
+      } catch (err) {
+        console.error('[TRANSFER_PENDING_EMAIL]', err);
+      }
 
       return NextResponse.json({
         message:   'External wire transfer submitted and awaiting admin approval',
@@ -146,14 +152,18 @@ async function handler(req) {
         channel:         'web',
       });
 
-      sendTransferPendingEmail({
-        to: req.user.email,
-        name: `${req.user.firstName} ${req.user.lastName}`,
-        amount: parsedAmount,
-        currency: senderAccount.currency,
-        recipientName: `${receiverAccount.user.firstName} ${receiverAccount.user.lastName}`,
-        reference: debitTxn.reference,
-      }).catch((err) => console.error('[TRANSFER_PENDING_EMAIL]', err));
+      try {
+        await sendTransferPendingEmail({
+          to: req.user.email,
+          name: `${req.user.firstName} ${req.user.lastName}`,
+          amount: parsedAmount,
+          currency: senderAccount.currency,
+          recipientName: `${receiverAccount.user.firstName} ${receiverAccount.user.lastName}`,
+          reference: debitTxn.reference,
+        });
+      } catch (err) {
+        console.error('[TRANSFER_PENDING_EMAIL]', err);
+      }
 
       return NextResponse.json({
         message:   'Transfer submitted and awaiting admin approval',
@@ -228,15 +238,19 @@ async function handler(req) {
 
       await dbSession.commitTransaction();
 
-      sendTransferSentEmail({
-        to: req.user.email,
-        name: `${req.user.firstName} ${req.user.lastName}`,
-        amount: parsedAmount,
-        currency: senderAccount.currency,
-        recipientName: `Your ${receiverAccount.accountType} account`,
-        accountNumber: senderAccount.accountNumber,
-        newBalance: senderAccount.balance,
-      }).catch((err) => console.error('[TRANSFER_SENT_EMAIL]', err));
+      try {
+        await sendTransferSentEmail({
+          to: req.user.email,
+          name: `${req.user.firstName} ${req.user.lastName}`,
+          amount: parsedAmount,
+          currency: senderAccount.currency,
+          recipientName: `Your ${receiverAccount.accountType} account`,
+          accountNumber: senderAccount.accountNumber,
+          newBalance: senderAccount.balance,
+        });
+      } catch (err) {
+        console.error('[TRANSFER_SENT_EMAIL]', err);
+      }
 
       return NextResponse.json({
         message:    'Transfer completed successfully',

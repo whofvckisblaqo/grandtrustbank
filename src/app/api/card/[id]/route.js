@@ -3,6 +3,8 @@ import { withAuth } from '@/lib/withAuth';
 import Card from '@/models/Card';
 import { sendCardActivityEmail } from '@/lib/email';
 
+export const maxDuration = 30;
+
 async function handler(req, { params }) {
   const { id } = await params;
   const card = await Card.findOne({ _id: id, user: req.user._id });
@@ -16,12 +18,16 @@ async function handler(req, { params }) {
 
   await card.save();
 
-  sendCardActivityEmail({
-    to: req.user.email,
-    name: `${req.user.firstName} ${req.user.lastName}`,
-    action: action === 'freeze' ? 'frozen' : 'unfrozen',
-    cardLast4: card.cardNumber ? card.cardNumber.slice(-4) : '****',
-  }).catch((err) => console.error('[CARD_ACTIVITY_EMAIL]', err));
+  try {
+    await sendCardActivityEmail({
+      to: req.user.email,
+      name: `${req.user.firstName} ${req.user.lastName}`,
+      action: action === 'freeze' ? 'frozen' : 'unfrozen',
+      cardLast4: card.cardNumber ? card.cardNumber.slice(-4) : '****',
+    });
+  } catch (err) {
+    console.error('[CARD_ACTIVITY_EMAIL]', err);
+  }
 
   return NextResponse.json({ card });
 }

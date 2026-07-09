@@ -7,6 +7,8 @@ import Loan from '@/models/Loan';
 import Transaction from '@/models/Transaction';
 import { sendDepositApprovedEmail, sendAccountStatusEmail, sendKycStatusEmail } from '@/lib/email';
 
+export const maxDuration = 30;
+
 async function getHandler(req, { params }) {
   try {
     const { id } = await params;
@@ -36,11 +38,15 @@ async function patchHandler(req, { params }) {
       }
       await user.save();
 
-      sendKycStatusEmail({
-        to: user.email,
-        name: `${user.firstName} ${user.lastName}`,
-        status: 'verified',
-      }).catch((err) => console.error('[KYC_APPROVED_EMAIL]', err));
+      try {
+        await sendKycStatusEmail({
+          to: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          status: 'verified',
+        });
+      } catch (err) {
+        console.error('[KYC_APPROVED_EMAIL]', err);
+      }
 
       return NextResponse.json({ message: 'KYC approved' });
     }
@@ -54,12 +60,16 @@ async function patchHandler(req, { params }) {
       }
       await user.save();
 
-      sendKycStatusEmail({
-        to: user.email,
-        name: `${user.firstName} ${user.lastName}`,
-        status: 'rejected',
-        reason,
-      }).catch((err) => console.error('[KYC_REJECTED_EMAIL]', err));
+      try {
+        await sendKycStatusEmail({
+          to: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          status: 'rejected',
+          reason,
+        });
+      } catch (err) {
+        console.error('[KYC_REJECTED_EMAIL]', err);
+      }
 
       return NextResponse.json({ message: 'KYC rejected' });
     }
@@ -70,12 +80,16 @@ async function patchHandler(req, { params }) {
 
       const accounts = await Account.find({ user: id, status: { $ne: 'closed' } });
       for (const acct of accounts) {
-        sendAccountStatusEmail({
-          to: user.email,
-          name: `${user.firstName} ${user.lastName}`,
-          status: 'frozen',
-          accountNumber: acct.accountNumber,
-        }).catch((err) => console.error('[ACCOUNT_FROZEN_EMAIL]', err));
+        try {
+          await sendAccountStatusEmail({
+            to: user.email,
+            name: `${user.firstName} ${user.lastName}`,
+            status: 'frozen',
+            accountNumber: acct.accountNumber,
+          });
+        } catch (err) {
+          console.error('[ACCOUNT_FROZEN_EMAIL]', err);
+        }
       }
 
       return NextResponse.json({ message: 'User suspended' });
@@ -88,12 +102,16 @@ async function patchHandler(req, { params }) {
 
       const accounts = await Account.find({ user: id, status: { $ne: 'closed' } });
       for (const acct of accounts) {
-        sendAccountStatusEmail({
-          to: user.email,
-          name: `${user.firstName} ${user.lastName}`,
-          status: 'unfrozen',
-          accountNumber: acct.accountNumber,
-        }).catch((err) => console.error('[ACCOUNT_UNFROZEN_EMAIL]', err));
+        try {
+          await sendAccountStatusEmail({
+            to: user.email,
+            name: `${user.firstName} ${user.lastName}`,
+            status: 'unfrozen',
+            accountNumber: acct.accountNumber,
+          });
+        } catch (err) {
+          console.error('[ACCOUNT_UNFROZEN_EMAIL]', err);
+        }
       }
 
       return NextResponse.json({ message: 'User activated' });
@@ -133,13 +151,17 @@ async function patchHandler(req, { params }) {
         channel:         'admin',
       });
 
-      sendDepositApprovedEmail({
-        to: user.email,
-        name: `${user.firstName} ${user.lastName}`,
-        amount,
-        currency: account.currency,
-        newBalance: account.balance,
-      }).catch((err) => console.error('[DEPOSIT_APPROVED_EMAIL]', err));
+      try {
+        await sendDepositApprovedEmail({
+          to: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          amount,
+          currency: account.currency,
+          newBalance: account.balance,
+        });
+      } catch (err) {
+        console.error('[DEPOSIT_APPROVED_EMAIL]', err);
+      }
 
       return NextResponse.json({
         message:    `${fmt(amount)} credited to ${account.accountNumber}`,
@@ -164,8 +186,6 @@ async function deleteHandler(req, { params }) {
     const accounts = await Account.find({ user: id });
     const accountIds = accounts.map((a) => a._id);
 
-    // Transactions where this user was BOTH sender and receiver (e.g. admin credits,
-    // own-account transfers) are safe to fully delete.
     await Transaction.deleteMany({
       $and: [
         { $or: [{ senderUser: id }, { senderUser: null }] },
@@ -175,8 +195,6 @@ async function deleteHandler(req, { params }) {
       ],
     });
 
-    // For transactions involving another party, keep the record for the other user's
-    // history but strip this user's identifying references.
     await Transaction.updateMany(
       { senderUser: id },
       { $set: { senderUser: null, senderAccount: null } }

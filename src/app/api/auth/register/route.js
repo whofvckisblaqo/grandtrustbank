@@ -6,6 +6,8 @@ import Card from '@/models/Card';
 import bcrypt from 'bcryptjs';
 import { sendOtpEmail } from '@/lib/email';
 
+export const maxDuration = 30;
+
 export async function POST(req) {
   try {
     await connectDB();
@@ -47,11 +49,25 @@ export async function POST(req) {
     const cardName = `${firstName} ${lastName}`.toUpperCase();
     await Card.create({ user: user._id, account: savings._id, cardType: 'debit', network: 'visa', cardName });
 
-    sendOtpEmail({
+    // OTP delivery is critical to this flow — actually wait for it and surface failure
+    const emailResult = await sendOtpEmail({
       to: user.email,
       name: `${firstName} ${lastName}`,
       otp,
-    }).catch((err) => console.error('[OTP_EMAIL]', err));
+    });
+
+    if (!emailResult.success) {
+      console.error('[OTP_EMAIL]', emailResult.error);
+      // User + accounts already exist, so don't block them — they can use "Resend code" on the verify page
+      return NextResponse.json(
+        {
+          message: 'Account created, but we had trouble sending your verification code. Use "Resend code" on the next page.',
+          email: user.email,
+          requiresVerification: true,
+        },
+        { status: 201 }
+      );
+    }
 
     return NextResponse.json(
       {

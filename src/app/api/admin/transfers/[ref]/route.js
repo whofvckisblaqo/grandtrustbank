@@ -5,6 +5,8 @@ import Transaction from '@/models/Transaction';
 import Account from '@/models/Account';
 import { sendTransferSentEmail, sendTransferReceivedEmail, sendTransferDeclinedEmail } from '@/lib/email';
 
+export const maxDuration = 30;
+
 async function handler(req, { params }) {
   try {
     const { ref } = await params;
@@ -33,14 +35,18 @@ async function handler(req, { params }) {
       }
 
       if (debitTxn.senderUser?.email) {
-        sendTransferDeclinedEmail({
-          to: debitTxn.senderUser.email,
-          name: `${debitTxn.senderUser.firstName} ${debitTxn.senderUser.lastName}`,
-          amount: debitTxn.amount,
-          currency: debitTxn.currency,
-          reference: debitTxn.reference,
-          reason,
-        }).catch((err) => console.error('[TRANSFER_DECLINED_EMAIL]', err));
+        try {
+          await sendTransferDeclinedEmail({
+            to: debitTxn.senderUser.email,
+            name: `${debitTxn.senderUser.firstName} ${debitTxn.senderUser.lastName}`,
+            amount: debitTxn.amount,
+            currency: debitTxn.currency,
+            reference: debitTxn.reference,
+            reason,
+          });
+        } catch (err) {
+          console.error('[TRANSFER_DECLINED_EMAIL]', err);
+        }
       }
 
       return NextResponse.json({ message: 'Transfer rejected' });
@@ -101,29 +107,37 @@ async function handler(req, { params }) {
       await dbSession.commitTransaction();
 
       if (debitTxn.senderUser?.email) {
-        sendTransferSentEmail({
-          to: debitTxn.senderUser.email,
-          name: `${debitTxn.senderUser.firstName} ${debitTxn.senderUser.lastName}`,
-          amount: debitTxn.amount,
-          currency: debitTxn.currency,
-          recipientName: receiverAccount
-            ? `${receiverAccount.user.firstName} ${receiverAccount.user.lastName}`
-            : (debitTxn.metadata?.externalDetails?.accountName || 'External Account'),
-          accountNumber: senderAccount.accountNumber,
-          newBalance: senderAccount.balance,
-        }).catch((err) => console.error('[TRANSFER_SENT_EMAIL]', err));
+        try {
+          await sendTransferSentEmail({
+            to: debitTxn.senderUser.email,
+            name: `${debitTxn.senderUser.firstName} ${debitTxn.senderUser.lastName}`,
+            amount: debitTxn.amount,
+            currency: debitTxn.currency,
+            recipientName: receiverAccount
+              ? `${receiverAccount.user.firstName} ${receiverAccount.user.lastName}`
+              : (debitTxn.metadata?.externalDetails?.accountName || 'External Account'),
+            accountNumber: senderAccount.accountNumber,
+            newBalance: senderAccount.balance,
+          });
+        } catch (err) {
+          console.error('[TRANSFER_SENT_EMAIL]', err);
+        }
       }
 
       if (receiverAccount?.user?.email) {
-        sendTransferReceivedEmail({
-          to: receiverAccount.user.email,
-          name: `${receiverAccount.user.firstName} ${receiverAccount.user.lastName}`,
-          amount: debitTxn.amount,
-          currency: debitTxn.currency,
-          senderName: `${debitTxn.senderUser.firstName} ${debitTxn.senderUser.lastName}`,
-          accountNumber: receiverAccount.accountNumber,
-          newBalance: receiverAccount.balance,
-        }).catch((err) => console.error('[TRANSFER_RECEIVED_EMAIL]', err));
+        try {
+          await sendTransferReceivedEmail({
+            to: receiverAccount.user.email,
+            name: `${receiverAccount.user.firstName} ${receiverAccount.user.lastName}`,
+            amount: debitTxn.amount,
+            currency: debitTxn.currency,
+            senderName: `${debitTxn.senderUser.firstName} ${debitTxn.senderUser.lastName}`,
+            accountNumber: receiverAccount.accountNumber,
+            newBalance: receiverAccount.balance,
+          });
+        } catch (err) {
+          console.error('[TRANSFER_RECEIVED_EMAIL]', err);
+        }
       }
 
       return NextResponse.json({ message: 'Transfer approved and completed' });

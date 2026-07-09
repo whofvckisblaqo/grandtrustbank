@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import Account from '@/models/Account';
+import Card from '@/models/Card';
 import bcrypt from 'bcryptjs';
 import { signToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 import { sendWelcomeEmail, sendCardActivityEmail } from '@/lib/email';
-import Card from '@/models/Card';
+
+export const maxDuration = 30;
 
 export async function POST(req) {
   try {
@@ -48,27 +50,36 @@ export async function POST(req) {
       path: '/',
     });
 
-    // Now that they're verified, send welcome + card-issued emails
     const savings = await Account.findOne({ user: user._id, accountType: 'savings' });
     const checking = await Account.findOne({ user: user._id, accountType: 'current' });
     const card = await Card.findOne({ user: user._id });
 
-    sendWelcomeEmail({
-      to: user.email,
-      name: `${user.firstName} ${user.lastName}`,
-      accountNumbers: [
-        { type: 'Savings', number: savings?.accountNumber },
-        { type: 'Checking', number: checking?.accountNumber },
-      ],
-    }).catch((err) => console.error('[WELCOME_EMAIL]', err));
-
-    if (card) {
-      sendCardActivityEmail({
+    // Non-critical emails — wait for them so Vercel doesn't kill them mid-flight,
+    // but a failure here shouldn't block verification from succeeding.
+    try {
+      await sendWelcomeEmail({
         to: user.email,
         name: `${user.firstName} ${user.lastName}`,
-        action: 'issued',
-        cardLast4: card.cardNumber ? card.cardNumber.slice(-4) : '****',
-      }).catch((err) => console.error('[CARD_ISSUED_EMAIL]', err));
+        accountNumbers: [
+          { type: 'Savings', number: savings?.accountNumber },
+          { type: 'Checking', number: checking?.accountNumber },
+        ],
+      });
+    } catch (err) {
+      console.error('[WELCOME_EMAIL]', err);
+    }
+
+    if (card) {
+      try {
+        await sendCardActivityEmail({
+          to: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          action: 'issued',
+          cardLast4: card.cardNumber ? card.cardNumber.slice(-4) : '****',
+        });
+      } catch (err) {
+        console.error('[CARD_ISSUED_EMAIL]', err);
+      }
     }
 
     return NextResponse.json({

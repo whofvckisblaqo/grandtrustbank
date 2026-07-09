@@ -5,6 +5,8 @@ import Account from '@/models/Account';
 import Transaction from '@/models/Transaction';
 import { sendLoanStatusEmail } from '@/lib/email';
 
+export const maxDuration = 30;
+
 async function handler(req, { params }) {
   const { id } = params;
   const { action, adminNotes, accountId } = await req.json();
@@ -46,14 +48,18 @@ async function handler(req, { params }) {
     loan.creditedAccount = account._id;
     await loan.save();
 
-    sendLoanStatusEmail({
-      to: loan.user.email,
-      name: `${loan.user.firstName} ${loan.user.lastName}`,
-      loanAmount: loan.amount,
-      currency: account.currency,
-      status: 'approved',
-      note: `Funds have been credited to your account ending in ${account.accountNumber.slice(-4)}.`,
-    }).catch((err) => console.error('[LOAN_APPROVED_EMAIL]', err));
+    try {
+      await sendLoanStatusEmail({
+        to: loan.user.email,
+        name: `${loan.user.firstName} ${loan.user.lastName}`,
+        loanAmount: loan.amount,
+        currency: account.currency,
+        status: 'approved',
+        note: `Funds have been credited to your account ending in ${account.accountNumber.slice(-4)}.`,
+      });
+    } catch (err) {
+      console.error('[LOAN_APPROVED_EMAIL]', err);
+    }
 
     return NextResponse.json({ message: `Loan approved and $${loan.amount.toLocaleString()} credited` });
   }
@@ -64,14 +70,18 @@ async function handler(req, { params }) {
     loan.rejectedAt = new Date();
     await loan.save();
 
-    sendLoanStatusEmail({
-      to: loan.user.email,
-      name: `${loan.user.firstName} ${loan.user.lastName}`,
-      loanAmount: loan.amount,
-      currency: loan.currency || 'USD',
-      status: 'declined',
-      note: adminNotes || undefined,
-    }).catch((err) => console.error('[LOAN_REJECTED_EMAIL]', err));
+    try {
+      await sendLoanStatusEmail({
+        to: loan.user.email,
+        name: `${loan.user.firstName} ${loan.user.lastName}`,
+        loanAmount: loan.amount,
+        currency: loan.currency || 'USD',
+        status: 'declined',
+        note: adminNotes || undefined,
+      });
+    } catch (err) {
+      console.error('[LOAN_REJECTED_EMAIL]', err);
+    }
 
     return NextResponse.json({ message: 'Loan application rejected' });
   }

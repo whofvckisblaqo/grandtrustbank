@@ -4,6 +4,8 @@ import Loan from '@/models/Loan';
 import User from '@/models/User';
 import { sendLoanStatusEmail } from '@/lib/email';
 
+export const maxDuration = 30;
+
 const RATES = {
   personal:  { rate: 12.5, min: 500,    max: 50000,    minMonths: 6,   maxMonths: 60 },
   business:  { rate: 9.5,  min: 5000,   max: 500000,   minMonths: 12,  maxMonths: 84 },
@@ -44,17 +46,21 @@ async function handler(req, _ctx, userId) {
     purpose: purpose.trim(),
   });
 
-  User.findById(userId).select('firstName lastName email').then((user) => {
-    if (!user) return;
-    sendLoanStatusEmail({
-      to: user.email,
-      name: `${user.firstName} ${user.lastName}`,
-      loanAmount: amount,
-      currency: 'USD',
-      status: 'pending',
-      note: `Your ${type} loan application is under review. You'll be notified once a decision is made.`,
-    }).catch((err) => console.error('[LOAN_PENDING_EMAIL]', err));
-  }).catch((err) => console.error('[LOAN_PENDING_EMAIL_USER_LOOKUP]', err));
+  try {
+    const user = await User.findById(userId).select('firstName lastName email');
+    if (user) {
+      await sendLoanStatusEmail({
+        to: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        loanAmount: amount,
+        currency: 'USD',
+        status: 'pending',
+        note: `Your ${type} loan application is under review. You'll be notified once a decision is made.`,
+      });
+    }
+  } catch (err) {
+    console.error('[LOAN_PENDING_EMAIL]', err);
+  }
 
   return NextResponse.json({ message: 'Loan application submitted successfully', loan }, { status: 201 });
 }

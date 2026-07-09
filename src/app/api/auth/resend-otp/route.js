@@ -4,6 +4,8 @@ import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { sendOtpEmail } from '@/lib/email';
 
+export const maxDuration = 30;
+
 export async function POST(req) {
   try {
     await connectDB();
@@ -19,11 +21,16 @@ export async function POST(req) {
     user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
-    sendOtpEmail({
+    const emailResult = await sendOtpEmail({
       to: user.email,
       name: `${user.firstName} ${user.lastName}`,
       otp,
-    }).catch((err) => console.error('[OTP_RESEND_EMAIL]', err));
+    });
+
+    if (!emailResult.success) {
+      console.error('[OTP_RESEND_EMAIL]', emailResult.error);
+      return NextResponse.json({ error: 'Failed to send email. Please try again.' }, { status: 500 });
+    }
 
     return NextResponse.json({ message: 'A new code has been sent to your email' });
   } catch (err) {
