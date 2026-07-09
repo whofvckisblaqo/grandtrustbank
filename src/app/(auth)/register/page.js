@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, User, Mail, Phone, Calendar, Lock, AlertCircle, ArrowRight, ChevronLeft } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Phone, Calendar, Lock, AlertCircle, ArrowRight, CheckCircle, ChevronLeft } from 'lucide-react';
 import InputField from '@/components/InputField';
 
 const STEPS = ['Personal Info', 'Security'];
