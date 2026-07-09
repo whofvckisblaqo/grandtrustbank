@@ -1,10 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, CreditCard, ArrowLeftRight, Send,
   Receipt, BarChart3, Settings, HelpCircle, LogOut, X,
-  Landmark, Coins, HandCoins
+  Landmark, Coins, HandCoins, ShieldCheck
 } from 'lucide-react';
 import GTBLogo from './GTBLogo';
 
@@ -25,7 +26,24 @@ const bottomItems = [
   { href: '/help',     icon: HelpCircle, label: 'Help' },
 ];
 
-function NavLink({ href, icon: Icon, label, onClick }) {
+function useKycStatus() {
+  const [kycStatus, setKycStatus] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setKycStatus(data.user?.kycStatus ?? data.kycStatus ?? null);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  return kycStatus;
+}
+
+function NavLink({ href, icon: Icon, label, onClick, dot }) {
   const pathname = usePathname();
   const active   = pathname === href;
   return (
@@ -39,8 +57,11 @@ function NavLink({ href, icon: Icon, label, onClick }) {
       }`}
     >
       <Icon size={18} className={active ? 'text-gtb-dark' : 'text-gtb-muted group-hover:text-gtb-accent transition-colors'} />
-      <span className="truncate">{label}</span>
-      {active && <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-gtb-dark/40" />}
+      <span className="truncate flex-1">{label}</span>
+      {dot && (
+        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${active ? 'bg-gtb-dark/40' : 'bg-gtb-warn'}`} />
+      )}
+      {active && !dot && <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-gtb-dark/40" />}
     </Link>
   );
 }
@@ -61,6 +82,9 @@ function MobileNavLink({ href, icon: Icon, label }) {
 }
 
 export function Sidebar({ onLogout }) {
+  const kycStatus = useKycStatus();
+  const kycUnverified = kycStatus && kycStatus !== 'verified';
+
   return (
     <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-gtb-card border-r border-white/[0.06] flex-shrink-0">
       <div className="px-5 py-5 border-b border-white/[0.06]">
@@ -72,6 +96,7 @@ export function Sidebar({ onLogout }) {
         {navItems.map(item => <NavLink key={item.href} {...item} />)}
         <div className="border-t border-white/[0.06] my-4" />
         <div className="text-[10px] text-gtb-muted font-semibold uppercase tracking-wider px-3 mb-2">Account</div>
+        <NavLink href="/kyc" icon={ShieldCheck} label="Verify Identity" dot={kycUnverified} />
         {bottomItems.map(item => <NavLink key={item.href} {...item} />)}
       </nav>
 
@@ -107,6 +132,9 @@ export function MobileNav({ onLogout }) {
 }
 
 export function MobileMenuDrawer({ open, onClose, onLogout }) {
+  const kycStatus = useKycStatus();
+  const kycUnverified = kycStatus && kycStatus !== 'verified';
+
   if (!open) return null;
   return (
     <div className="lg:hidden fixed inset-0 z-50">
@@ -119,6 +147,7 @@ export function MobileMenuDrawer({ open, onClose, onLogout }) {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map(item => <NavLink key={item.href} {...item} onClick={onClose} />)}
           <div className="border-t border-white/[0.06] my-4" />
+          <NavLink href="/kyc" icon={ShieldCheck} label="Verify Identity" dot={kycUnverified} onClick={onClose} />
           {bottomItems.map(item => <NavLink key={item.href} {...item} onClick={onClose} />)}
         </nav>
         <div className="px-3 py-4 border-t border-white/[0.06]">
