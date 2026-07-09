@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Copy, CheckCircle, Send, Eye, Plus, Landmark, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { GTB_ROUTING_NUMBER } from '@/lib/bank';
 
 const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n ?? 0);
 
@@ -63,6 +64,39 @@ function AccountCard({ account, onCopy, copied }) {
             <Eye size={16} />
             History
           </Link>
+        </div>
+
+        {/* Bank details for receiving external deposits (ACH, direct deposit, wires) */}
+        <div className="glass rounded-xl p-3 space-y-2.5">
+          <div className="text-gtb-muted text-[10px] uppercase tracking-wider">Bank Details for Deposits</div>
+
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <div className="text-gtb-muted text-[10px]">Account Number</div>
+              <div className="text-white font-mono text-sm truncate">{account.accountNumber}</div>
+            </div>
+            <button
+              onClick={() => onCopy(account.accountNumber)}
+              className="flex-shrink-0 text-gtb-muted hover:text-gtb-accent transition-colors p-1.5"
+              aria-label="Copy account number"
+            >
+              {copied === account.accountNumber ? <CheckCircle size={15} className="text-gtb-success" /> : <Copy size={15} />}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/[0.06]">
+            <div className="min-w-0">
+              <div className="text-gtb-muted text-[10px]">Routing Number (ABA)</div>
+              <div className="text-white font-mono text-sm truncate">{GTB_ROUTING_NUMBER}</div>
+            </div>
+            <button
+              onClick={() => onCopy(GTB_ROUTING_NUMBER)}
+              className="flex-shrink-0 text-gtb-muted hover:text-gtb-accent transition-colors p-1.5"
+              aria-label="Copy routing number"
+            >
+              {copied === GTB_ROUTING_NUMBER ? <CheckCircle size={15} className="text-gtb-success" /> : <Copy size={15} />}
+            </button>
+          </div>
         </div>
 
         {/* Account details */}
