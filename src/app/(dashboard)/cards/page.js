@@ -37,7 +37,7 @@ function FlipCard({ card, onToggleFreeze, toggling }) {
         <div style={{
           position: 'relative',
           width: '100%',
-          aspectRatio: '1.586',
+          minHeight: '250px',
           transformStyle: 'preserve-3d',
           transition: 'transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1)',
           transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -48,10 +48,14 @@ function FlipCard({ card, onToggleFreeze, toggling }) {
             position: 'absolute', inset: 0,
             backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
             background: cardGradient(card.cardType, card.network),
-            borderRadius: '20px', padding: '24px', overflow: 'hidden',
+            borderRadius: '20px', padding: '20px', overflow: 'hidden',
             boxShadow: card.status === 'frozen'
               ? '0 20px 60px rgba(59,130,246,0.3)'
               : '0 20px 60px rgba(0,224,184,0.25)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '10px',
           }}>
             {/* Dot grid */}
             <div style={{ position: 'absolute', inset: 0, opacity: 0.06, backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
@@ -67,7 +71,7 @@ function FlipCard({ card, onToggleFreeze, toggling }) {
             )}
 
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1, flexShrink: 0 }}>
               <div>
                 <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11 }}>Grand Trust Bank</div>
                 <div style={{ color: 'white', fontWeight: 700, fontSize: 12 }}>{card.cardType.toUpperCase()} · {card.isVirtual ? 'VIRTUAL' : 'PHYSICAL'}</div>
@@ -83,22 +87,22 @@ function FlipCard({ card, onToggleFreeze, toggling }) {
             </div>
 
             {/* Chip */}
-            <div style={{ width: 40, height: 30, borderRadius: 6, background: 'linear-gradient(135deg,#f0c040,#d4a020)', boxShadow: '0 2px 8px rgba(240,192,64,0.4)', marginBottom: 16, position: 'relative', zIndex: 1 }} />
+            <div style={{ width: 38, height: 28, borderRadius: 6, background: 'linear-gradient(135deg,#f0c040,#d4a020)', boxShadow: '0 2px 8px rgba(240,192,64,0.4)', position: 'relative', zIndex: 1, flexShrink: 0 }} />
 
             {/* Card number */}
-            <div style={{ color: 'white', fontSize: 17, fontWeight: 700, letterSpacing: '3px', marginBottom: 16, fontFamily: 'monospace', position: 'relative', zIndex: 1 }}>
+            <div style={{ color: 'white', fontSize: 16, fontWeight: 700, letterSpacing: '2.5px', fontFamily: 'monospace', position: 'relative', zIndex: 1, flexShrink: 0 }}>
               {masked}
             </div>
 
             {/* Name + expiry */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-              <div>
-                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, marginBottom: 2, textTransform: 'uppercase' }}>Cardholder</div>
-                <div style={{ color: 'white', fontSize: 13, fontWeight: 600 }}>{card.cardName}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', position: 'relative', zIndex: 1, flexShrink: 0 }}>
+              <div style={{ minWidth: 0, maxWidth: '60%' }}>
+                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, marginBottom: 3, textTransform: 'uppercase' }}>Cardholder</div>
+                <div style={{ color: 'white', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.cardName}</div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, marginBottom: 2, textTransform: 'uppercase' }}>Expires</div>
-                <div style={{ color: 'white', fontSize: 13, fontWeight: 600 }}>{card.expiryMonth}/{card.expiryYear}</div>
+              <div style={{ textAlign: 'right', flexShrink: 0, paddingLeft: 8 }}>
+                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, marginBottom: 3, textTransform: 'uppercase' }}>Expires</div>
+                <div style={{ color: 'white', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>{card.expiryMonth}/{card.expiryYear}</div>
               </div>
             </div>
           </div>
@@ -112,32 +116,36 @@ function FlipCard({ card, onToggleFreeze, toggling }) {
             borderRadius: '20px', overflow: 'hidden',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
             border: '1px solid rgba(255,255,255,0.08)',
+            display: 'flex',
+            flexDirection: 'column',
           }}>
             {/* Magnetic stripe */}
-            <div style={{ width: '100%', height: 50, background: '#111', marginTop: 28 }} />
+            <div style={{ width: '100%', height: 36, background: '#111', marginTop: 20, flexShrink: 0 }} />
 
             {/* Signature strip */}
-            <div style={{ padding: '16px 24px' }}>
-              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginBottom: 6 }}>AUTHORIZED SIGNATURE</div>
-              <div style={{ background: 'linear-gradient(90deg, #f0f0f0, #e0e0e0)', borderRadius: 4, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontStyle: 'italic', color: '#333', fontSize: 12, letterSpacing: 1 }}>{card.cardName}</div>
-                <div style={{ background: 'white', padding: '2px 10px', borderRadius: 4, fontWeight: 700, color: '#111', fontFamily: 'monospace', fontSize: 14, letterSpacing: 2 }}>
-                  {revealed ? card.cvv : '•••'}
+            <div style={{ padding: '14px 20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12, minHeight: 0 }}>
+              <div>
+                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginBottom: 6 }}>AUTHORIZED SIGNATURE</div>
+                <div style={{ background: 'linear-gradient(90deg, #f0f0f0, #e0e0e0)', borderRadius: 4, padding: '9px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontStyle: 'italic', color: '#333', fontSize: 12, letterSpacing: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.cardName}</div>
+                  <div style={{ background: 'white', padding: '2px 10px', borderRadius: 4, fontWeight: 700, color: '#111', fontFamily: 'monospace', fontSize: 13, letterSpacing: 2, flexShrink: 0, marginLeft: 8 }}>
+                    {revealed ? card.cvv : '•••'}
+                  </div>
                 </div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, textAlign: 'right', marginTop: 4 }}>CVV / CVC</div>
               </div>
-              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, textAlign: 'right', marginTop: 3 }}>CVV / CVC</div>
 
-              <div style={{ marginTop: 16, fontFamily: 'monospace', fontSize: 13, color: revealed ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)', letterSpacing: 3 }}>
+              <div style={{ fontFamily: 'monospace', fontSize: 12, color: revealed ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>
                 {revealed ? full : '**** **** **** ' + card.last4}
               </div>
             </div>
 
-            {/* Footer */}
-            <div style={{ position: 'absolute', bottom: 18, left: 24, right: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {/* Footer — normal flow, safely below the signature block */}
+            <div style={{ padding: '10px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
               <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10 }}>Grand Trust Bank · grandtrustbank.com</div>
               <button
                 onClick={e => { e.stopPropagation(); setRevealed(r => !r); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#00E0B8', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#00E0B8', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', flexShrink: 0 }}
               >
                 {revealed ? <EyeOff size={13} /> : <Eye size={13} />}
                 {revealed ? 'Hide' : 'Reveal'}
@@ -317,7 +325,7 @@ export default function CardsPage() {
 
       {loading ? (
         <div className="grid sm:grid-cols-2 gap-6">
-          {[1, 2].map(i => <div key={i} className="glass-card rounded-3xl p-6"><div className="shimmer rounded-2xl" style={{ aspectRatio: '1.586' }} /></div>)}
+          {[1, 2].map(i => <div key={i} className="glass-card rounded-3xl p-6"><div className="shimmer rounded-2xl" style={{ minHeight: '250px' }} /></div>)}
         </div>
       ) : cards.length === 0 ? (
         <div className="glass-card rounded-3xl p-12 text-center">
