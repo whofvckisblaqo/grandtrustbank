@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Eye, EyeOff, Snowflake, Unlock, Copy, CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
+import { Plus, Snowflake, Unlock, Copy, CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
 
 const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n ?? 0);
 
@@ -17,7 +17,6 @@ const cardGradient = (type, network) => {
 
 function FlipCard({ card, onToggleFreeze, toggling }) {
   const [flipped, setFlipped] = useState(false);
-  const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const masked = `**** **** **** ${card.last4}`;
@@ -107,7 +106,7 @@ function FlipCard({ card, onToggleFreeze, toggling }) {
             </div>
           </div>
 
-          {/* BACK */}
+          {/* BACK — full number and CVV now show automatically once flipped, no extra reveal step */}
           <div style={{
             position: 'absolute', inset: 0,
             backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
@@ -129,33 +128,26 @@ function FlipCard({ card, onToggleFreeze, toggling }) {
                 <div style={{ background: 'linear-gradient(90deg, #f0f0f0, #e0e0e0)', borderRadius: 4, padding: '9px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ fontStyle: 'italic', color: '#333', fontSize: 12, letterSpacing: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.cardName}</div>
                   <div style={{ background: 'white', padding: '2px 10px', borderRadius: 4, fontWeight: 700, color: '#111', fontFamily: 'monospace', fontSize: 13, letterSpacing: 2, flexShrink: 0, marginLeft: 8 }}>
-                    {revealed ? card.cvv : '•••'}
+                    {card.cvv}
                   </div>
                 </div>
                 <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, textAlign: 'right', marginTop: 4 }}>CVV / CVC</div>
               </div>
 
-              <div style={{ fontFamily: 'monospace', fontSize: 12, color: revealed ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>
-                {revealed ? full : '**** **** **** ' + card.last4}
+              <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'rgba(255,255,255,0.9)', letterSpacing: 2 }}>
+                {full}
               </div>
             </div>
 
-            {/* Footer — normal flow, safely below the signature block */}
-            <div style={{ padding: '10px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            {/* Footer */}
+            <div style={{ padding: '10px 20px 16px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
               <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10 }}>Grand Trust Bank · grandtrustbank.com</div>
-              <button
-                onClick={e => { e.stopPropagation(); setRevealed(r => !r); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#00E0B8', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', flexShrink: 0 }}
-              >
-                {revealed ? <EyeOff size={13} /> : <Eye size={13} />}
-                {revealed ? 'Hide' : 'Reveal'}
-              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <p className="text-gtb-muted text-xs text-center">Click card to flip · Tap Reveal on back to show details</p>
+      <p className="text-gtb-muted text-xs text-center">Click card to flip and see full details</p>
 
       {/* Actions */}
       <div className="grid grid-cols-3 gap-2">
