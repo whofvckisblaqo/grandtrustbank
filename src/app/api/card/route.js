@@ -16,6 +16,11 @@ async function postHandler(req) {
   const account = await Account.findOne({ _id: accountId, user: req.user._id, status: 'active' });
   if (!account) return NextResponse.json({ error: 'Account not found or inactive' }, { status: 404 });
 
+  const existing = await Card.findOne({ account: accountId, user: req.user._id });
+  if (existing) {
+    return NextResponse.json({ error: 'This account already has a card. Cancel it first if you need a new one.' }, { status: 409 });
+  }
+
   const cardName = `${req.user.firstName} ${req.user.lastName}`.toUpperCase();
 
   const card = await Card.create({

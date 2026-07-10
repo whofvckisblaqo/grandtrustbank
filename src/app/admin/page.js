@@ -684,37 +684,39 @@ function UsersTab() {
         <div className="space-y-3">
           {users.map(user => (
             <div key={user._id} className="glass-card rounded-2xl p-4">
-              <div className="flex items-start gap-4">
-                {/* Avatar */}
-                <div className="w-10 h-10 rounded-xl bg-gtb-accent/15 border border-gtb-accent/20 flex items-center justify-center flex-shrink-0 text-gtb-accent font-bold text-sm">
-                  {user.firstName?.[0]}{user.lastName?.[0]}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="text-white font-semibold text-sm">{user.firstName} {user.lastName}</div>
-                    <div className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{
-                      background: `${kycColors[user.kycStatus]}15`,
-                      color:       kycColors[user.kycStatus],
-                      border:      `1px solid ${kycColors[user.kycStatus]}25`,
-                    }}>
-                      {kycLabels[user.kycStatus] || user.kycStatus}
-                    </div>
-                    {user.isSuspended && (
-                      <div className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gtb-danger/10 text-gtb-danger border border-gtb-danger/20">
-                        Suspended
-                      </div>
-                    )}
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                <div className="flex items-start gap-4 flex-1 min-w-0">
+                  {/* Avatar */}
+                  <div className="w-10 h-10 rounded-xl bg-gtb-accent/15 border border-gtb-accent/20 flex items-center justify-center flex-shrink-0 text-gtb-accent font-bold text-sm">
+                    {user.firstName?.[0]}{user.lastName?.[0]}
                   </div>
-                  <div className="text-gtb-muted text-xs mt-0.5">{user.email} · {user.phone}</div>
-                  <div className="text-gtb-muted text-xs mt-0.5">
-                    {user.accountCount} account{user.accountCount !== 1 ? 's' : ''} · {fmt(user.totalBalance)} balance · Joined {timeAgo(user.createdAt)}
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="text-white font-semibold text-sm">{user.firstName} {user.lastName}</div>
+                      <div className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{
+                        background: `${kycColors[user.kycStatus]}15`,
+                        color:       kycColors[user.kycStatus],
+                        border:      `1px solid ${kycColors[user.kycStatus]}25`,
+                      }}>
+                        {kycLabels[user.kycStatus] || user.kycStatus}
+                      </div>
+                      {user.isSuspended && (
+                        <div className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gtb-danger/10 text-gtb-danger border border-gtb-danger/20">
+                          Suspended
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-gtb-muted text-xs mt-0.5 break-all">{user.email} · {user.phone}</div>
+                    <div className="text-gtb-muted text-xs mt-0.5">
+                      {user.accountCount} account{user.accountCount !== 1 ? 's' : ''} · {fmt(user.totalBalance)} balance · Joined {timeAgo(user.createdAt)}
+                    </div>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-wrap gap-2 flex-shrink-0">
+                <div className="flex flex-wrap gap-2 sm:flex-shrink-0">
                   {user.kycStatus !== 'not_submitted' && (
                     <button
                       onClick={() => openDocsModal(user)}

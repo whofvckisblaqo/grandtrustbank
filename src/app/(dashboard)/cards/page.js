@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Snowflake, Unlock, Copy, CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
+import { Plus, Snowflake, Unlock, Copy, CheckCircle, AlertCircle, CreditCard, XCircle } from 'lucide-react';
 
 const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n ?? 0);
 
@@ -15,9 +15,10 @@ const cardGradient = (type, network) => {
   return 'linear-gradient(135deg, #00E0B8 0%, #0d3d35 50%, #0B1020 100%)';
 };
 
-function FlipCard({ card, onToggleFreeze, toggling }) {
+function FlipCard({ card, onToggleFreeze, toggling, onCancel, cancelingId }) {
   const [flipped, setFlipped] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const masked = `**** **** **** ${card.last4}`;
   const full = formatNumber(card.fullNumber);
@@ -106,7 +107,7 @@ function FlipCard({ card, onToggleFreeze, toggling }) {
             </div>
           </div>
 
-          {/* BACK — full number and CVV now show automatically once flipped, no extra reveal step */}
+          {/* BACK */}
           <div style={{
             position: 'absolute', inset: 0,
             backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
@@ -180,6 +181,35 @@ function FlipCard({ card, onToggleFreeze, toggling }) {
         </div>
       </div>
 
+      {/* Cancel Card */}
+      {confirmCancel ? (
+        <div className="flex gap-2">
+          <button
+            onClick={() => setConfirmCancel(false)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl glass text-gtb-subtle text-xs font-medium hover:text-white transition-all"
+          >
+            Keep Card
+          </button>
+          <button
+            onClick={() => onCancel(card._id)}
+            disabled={cancelingId === card._id}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gtb-danger/10 border border-gtb-danger/20 text-gtb-danger text-xs font-medium hover:bg-gtb-danger/20 transition-all disabled:opacity-50"
+          >
+            {cancelingId === card._id
+              ? <div className="w-4 h-4 border-2 border-gtb-danger/30 border-t-gtb-danger rounded-full animate-spin" />
+              : <XCircle size={14} />}
+            {cancelingId === card._id ? 'Cancelling…' : 'Confirm Cancel'}
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setConfirmCancel(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-gtb-muted text-xs font-medium hover:text-gtb-danger hover:border-gtb-danger/20 transition-all"
+        >
+          <XCircle size={14} /> Cancel Card
+        </button>
+      )}
+
       {/* Credit info */}
       {card.cardType === 'credit' && (
         <div className="glass-card rounded-xl p-4 grid grid-cols-2 gap-3 text-sm">
@@ -211,6 +241,20 @@ function RequestCardModal({ accounts, onClose, onSuccess }) {
       onSuccess(data.card);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
+  }
+
+  if (accounts.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative glass-card rounded-3xl p-6 w-full max-w-sm animate-slide-up text-center">
+          <AlertCircle size={32} className="text-gtb-muted mx-auto mb-3" />
+          <h3 className="text-white font-bold text-lg mb-2">No Eligible Accounts</h3>
+          <p className="text-gtb-muted text-sm mb-5">Every active account already has a card. Cancel an existing card first if you need a new one on that account.</p>
+          <button onClick={onClose} className="btn-ghost w-full justify-center">Close</button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -276,6 +320,7 @@ export default function CardsPage() {
   const [cards, setCards]         = useState([]);
   const [loading, setLoading]     = useState(true);
   const [toggling, setToggling]   = useState('');
+  const [cancelingId, setCancelingId] = useState('');
   const [showModal, setShowModal] = useState(false);
 
   async function fetchCards() {
@@ -302,6 +347,20 @@ export default function CardsPage() {
     } catch { }
     finally { setToggling(''); }
   }
+
+  async function handleCancelCard(id) {
+    setCancelingId(id);
+    try {
+      const res = await fetch(`/api/card/${id}`, { method: 'DELETE' });
+      if (res.ok) setCards(prev => prev.filter(c => c._id !== id));
+    } catch { }
+    finally { setCancelingId(''); }
+  }
+
+  // Accounts that don't already have a card — these are the only ones eligible for a new card
+  const accountsWithoutCard = accounts
+    .filter(a => a.status === 'active')
+    .filter(a => !cards.some(c => c.account?._id === a._id || c.account === a._id));
 
   return (
     <div className="px-4 sm:px-6 py-6 max-w-3xl mx-auto">
@@ -332,7 +391,7 @@ export default function CardsPage() {
         <div className="grid sm:grid-cols-2 gap-8">
           {cards.map(card => (
             <div key={card._id} className="glass-card rounded-3xl p-5">
-              <FlipCard card={card} onToggleFreeze={handleToggleFreeze} toggling={toggling} />
+              <FlipCard card={card} onToggleFreeze={handleToggleFreeze} toggling={toggling} onCancel={handleCancelCard} cancelingId={cancelingId} />
             </div>
           ))}
         </div>
@@ -340,7 +399,7 @@ export default function CardsPage() {
 
       {showModal && (
         <RequestCardModal
-          accounts={accounts.filter(a => a.status === 'active')}
+          accounts={accountsWithoutCard}
           onClose={() => setShowModal(false)}
           onSuccess={card => { setCards(prev => [card, ...prev]); setShowModal(false); }}
         />

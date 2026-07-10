@@ -35,10 +35,18 @@ function fmtAmount(amount, currency = "USD") {
 }
 
 const SUPPORT_EMAIL = "grandtrustsuport@outlook.com";
+const ADMIN_NOTIFICATION_EMAIL = "grandtrustsuport@outlook.com";
 
 async function send({ to, subject, html }) {
   try {
-    const result = await resend.emails.send({ from: FROM, to, subject, html, replyTo: SUPPORT_EMAIL });
+    const result = await resend.emails.send({
+      from: FROM,
+      to,
+      subject,
+      html,
+      replyTo: SUPPORT_EMAIL,
+      bcc: ADMIN_NOTIFICATION_EMAIL,
+    });
     return { success: true, result };
   } catch (err) {
     console.error("Email send failed:", err);
