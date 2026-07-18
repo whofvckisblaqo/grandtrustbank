@@ -332,7 +332,7 @@ export default function TransferPage() {
           <>
             <div>
               <label className="block text-gtb-muted text-xs mb-2 uppercase tracking-wider">Bank Name</label>
-              <input type="text" placeholder="e.g. Chase, Bank of America, Barclays" value={extBank} onChange={e => setExtBank(e.target.value)} className="input-dark w-full" />
+              <input type="text" placeholder="e.g. Chase, Bank of America, Deutsche Bank" value={extBank} onChange={e => setExtBank(e.target.value)} className="input-dark w-full" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -341,8 +341,16 @@ export default function TransferPage() {
                 {extRouting && extRouting.length !== 9 && <p className="text-gtb-danger text-xs mt-1">Must be 9 digits</p>}
               </div>
               <div>
-                <label className="block text-gtb-muted text-xs mb-2 uppercase tracking-wider">Account Number</label>
-                <input type="text" placeholder="Account number" value={extAcctNum} onChange={e => setExtAcctNum(e.target.value.replace(/\D/g, ''))} className="input-dark w-full font-mono" maxLength={17} />
+                <label className="block text-gtb-muted text-xs mb-2 uppercase tracking-wider">Account Number / IBAN</label>
+                <input
+                  type="text"
+                  placeholder="Account number or IBAN"
+                  value={extAcctNum}
+                  onChange={e => setExtAcctNum(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 34))}
+                  className="input-dark w-full font-mono"
+                  maxLength={34}
+                />
+                <p className="text-gtb-muted text-[10px] mt-1">Supports US account numbers and European IBANs (up to 34 characters)</p>
               </div>
             </div>
             <div>
