@@ -335,6 +335,14 @@ function UsersTab() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Daily transfer limit
+  const [limitModal, setLimitModal] = useState(null); // { userId, userName, accounts[] }
+  const [limitAcct, setLimitAcct]   = useState('');
+  const [limitAmt, setLimitAmt]     = useState('');
+  const [limitLoading, setLimitLoading] = useState(false);
+  const [limitError, setLimitError] = useState('');
+  const [limitAcctLoading, setLimitAcctLoading] = useState(false);
+
   const showToast = msg => { setToast(msg); setTimeout(() => setToast(''), 3500); };
 
   const fetchUsers = useCallback(async () => {
@@ -441,6 +449,46 @@ function UsersTab() {
     }
   }
 
+  async function openLimitModal(user) {
+    setLimitModal({ userId: user._id, userName: `${user.firstName} ${user.lastName}`, accounts: [] });
+    setLimitAcct('');
+    setLimitAmt('');
+    setLimitError('');
+    setLimitAcctLoading(true);
+    try {
+      const res  = await fetch(`/api/admin/users/${user._id}`);
+      const data = await res.json();
+      const accts = data.accounts || [];
+      setLimitModal(m => ({ ...m, accounts: accts }));
+      if (accts.length) {
+        setLimitAcct(accts[0]._id);
+        setLimitAmt(String(accts[0].dailyTransferLimit ?? ''));
+      }
+    } catch {}
+    finally { setLimitAcctLoading(false); }
+  }
+
+  async function submitLimit() {
+    const amount = parseFloat(limitAmt);
+    if (!limitAcct) { setLimitError('Please select an account'); return; }
+    if (!amount || amount <= 0) { setLimitError('Enter a valid limit greater than $0'); return; }
+    setLimitLoading(true);
+    setLimitError('');
+    try {
+      const res = await fetch(`/api/admin/users/${limitModal.userId}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ action: 'update_limit', limitAmount: amount, accountId: limitAcct }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      showToast('✓ ' + data.message);
+      setLimitModal(null);
+      fetchUsers();
+    } catch (e) { setLimitError(e.message); }
+    finally { setLimitLoading(false); }
+  }
+
   return (
     <div className="space-y-4">
       {toast && (
@@ -498,6 +546,68 @@ function UsersTab() {
                 {creditLoading
                   ? <><div className="w-4 h-4 border-2 border-gtb-dark/30 border-t-gtb-dark rounded-full animate-spin" /> Crediting…</>
                   : <><DollarSign size={15} /> Credit Funds</>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Limit modal */}
+      {limitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setLimitModal(null)} />
+          <div className="relative glass-card rounded-2xl p-6 w-full max-w-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-white font-bold">Update Daily Transfer Limit</div>
+              <button onClick={() => setLimitModal(null)} className="text-gtb-muted hover:text-white"><X size={18} /></button>
+            </div>
+            <p className="text-gtb-muted text-sm mb-4">Updating limit for <span className="text-white font-semibold">{limitModal.userName}</span></p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-gtb-muted text-xs mb-2 uppercase tracking-wider">Account</label>
+                {limitAcctLoading ? (
+                  <div className="input-dark w-full flex items-center gap-2 text-gtb-muted text-sm">
+                    <div className="w-4 h-4 border-2 border-gtb-accent/30 border-t-gtb-accent rounded-full animate-spin" /> Loading accounts…
+                  </div>
+                ) : limitModal?.accounts?.length > 0 ? (
+                  <select
+                    value={limitAcct}
+                    onChange={e => {
+                      setLimitAcct(e.target.value);
+                      const acct = limitModal.accounts.find(a => a._id === e.target.value);
+                      setLimitAmt(String(acct?.dailyTransferLimit ?? ''));
+                    }}
+                    className="input-dark w-full"
+                    style={{ backgroundColor: '#0B1020', color: '#fff' }}
+                  >
+                    {limitModal.accounts.map(a => (
+                      <option key={a._id} value={a._id} style={{ backgroundColor: '#0B1020' }}>
+                        {a.accountType === 'current' ? 'Checking' : a.accountType.charAt(0).toUpperCase() + a.accountType.slice(1)} — {a.accountNumber} (current limit: {fmt(a.dailyTransferLimit)})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="text-gtb-muted text-sm">No accounts found for this user</div>
+                )}
+              </div>
+              <div>
+                <label className="block text-gtb-muted text-xs mb-2 uppercase tracking-wider">New Daily Limit (USD)</label>
+                <input type="number" value={limitAmt} onChange={e => setLimitAmt(e.target.value)} placeholder="0.00" min="1" className="input-dark w-full" />
+              </div>
+              {limitError && (
+                <div className="flex items-center gap-2 text-gtb-danger text-sm bg-gtb-danger/10 border border-gtb-danger/20 rounded-xl p-3">
+                  <AlertCircle size={14} className="flex-shrink-0" /> {limitError}
+                </div>
+              )}
+              <button
+                onClick={submitLimit}
+                disabled={limitLoading || limitAcctLoading || !limitModal?.accounts?.length}
+                className="btn-primary w-full justify-center disabled:opacity-50"
+              >
+                {limitLoading
+                  ? <><div className="w-4 h-4 border-2 border-gtb-dark/30 border-t-gtb-dark rounded-full animate-spin" /> Updating…</>
+                  : <><TrendingUp size={15} /> Update Limit</>
                 }
               </button>
             </div>
@@ -747,6 +857,12 @@ function UsersTab() {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gtb-accent/10 border border-gtb-accent/20 text-gtb-accent text-xs font-medium hover:bg-gtb-accent/20 transition-all"
                   >
                     <DollarSign size={13} /> Credit
+                  </button>
+                  <button
+                    onClick={() => openLimitModal(user)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium hover:bg-blue-500/20 transition-all"
+                  >
+                    <TrendingUp size={13} /> Limit
                   </button>
                   <button
                     onClick={() => setDeleteModal({ userId: user._id, userName: `${user.firstName} ${user.lastName}`, userEmail: user.email })}

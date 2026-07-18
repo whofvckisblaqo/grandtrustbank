@@ -265,3 +265,16 @@ export async function sendKycStatusEmail({ to, name, status, reason }) {
   });
   return send({ to, subject: `Identity Verification ${status === "verified" ? "Approved" : "Rejected"} - GrandTrust Bank`, html });
 }
+
+// ---------- 13. Daily transfer limit updated ----------
+export async function sendLimitUpdatedEmail({ to, name, accountNumber, newLimit, currency = "USD" }) {
+  const html = wrapEmail({
+    heading: "Daily Transfer Limit Updated",
+    body: `
+      <p>Hi ${name}, the daily transfer limit on your account <strong>${accountNumber}</strong> has been updated.</p>
+      <p><strong>New Daily Limit:</strong> ${fmtAmount(newLimit, currency)}</p>
+    `,
+    accentColor: "#0F5132",
+  });
+  return send({ to, subject: "Daily Transfer Limit Updated - GrandTrust Bank", html });
+}
