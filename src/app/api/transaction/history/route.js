@@ -37,8 +37,8 @@ async function handler(req) {
       .limit(limit)
       .populate('senderUser',   'firstName lastName')
       .populate('receiverUser', 'firstName lastName')
-      .populate('senderAccount',   'accountNumber')
-      .populate('receiverAccount', 'accountNumber'),
+      .populate('senderAccount',   'accountNumber accountType')
+      .populate('receiverAccount', 'accountNumber accountType'),
     Transaction.countDocuments(filter),
   ]);
 

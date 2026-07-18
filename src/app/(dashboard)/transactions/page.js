@@ -6,16 +6,22 @@ import TransactionReceipt from '@/components/TransactionReceipt';
 import { ArrowLeftRight, Filter, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 
 function buildReceiptFromTxn(txn) {
-  const isCredit = txn.direction === 'credit';
+  const isOwnTransfer = txn.senderUser && txn.receiverUser &&
+    String(txn.senderUser._id) === String(txn.receiverUser._id);
+
   const senderName = txn.senderUser
     ? `${txn.senderUser.firstName} ${txn.senderUser.lastName}`
-    : (txn.metadata?.externalDetails?.bankName || 'External');
-  const receiverName = txn.receiverUser
-    ? `${txn.receiverUser.firstName} ${txn.receiverUser.lastName}`
-    : (txn.metadata?.externalDetails?.accountName || txn.metadata?.externalDetails?.bankName || 'External Account');
+    : (txn.metadata?.externalDetails?.bankName || 'External Account');
 
-  const fromAccountLabel = txn.senderAccount?.accountType === 'current' ? 'Checking' : (txn.senderAccount?.accountType || 'Your Account');
-  const toAccountLabel   = txn.receiverAccount?.accountType === 'current' ? 'Checking' : (txn.receiverAccount?.accountType || 'Your Account');
+  const receiverAccountLabel = txn.receiverAccount?.accountType === 'current'
+    ? 'Checking'
+    : (txn.receiverAccount?.accountType
+        ? txn.receiverAccount.accountType.charAt(0).toUpperCase() + txn.receiverAccount.accountType.slice(1)
+        : 'Account');
+
+  const receiverName = txn.receiverUser
+    ? (isOwnTransfer ? `Your ${receiverAccountLabel} Account` : `${txn.receiverUser.firstName} ${txn.receiverUser.lastName}`)
+    : (txn.metadata?.externalDetails?.accountName || txn.metadata?.externalDetails?.bankName || 'External Account');
 
   return {
     reference: txn.reference,
@@ -27,9 +33,9 @@ function buildReceiptFromTxn(txn) {
     narration: txn.narration,
     createdAt: txn.createdAt,
     type: txn.type,
-    fromLabel: isCredit ? senderName : fromAccountLabel,
+    fromLabel: senderName,
     fromAccountNumber: txn.senderAccount?.accountNumber,
-    toLabel: isCredit ? toAccountLabel : receiverName,
+    toLabel: receiverName,
     toAccountNumber: txn.receiverAccount?.accountNumber,
   };
 }
