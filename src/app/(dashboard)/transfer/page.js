@@ -407,7 +407,7 @@ export default function TransferPage() {
         {type !== 'own' && (
           <div className="flex items-start gap-2 bg-gtb-warn/5 border border-gtb-warn/15 rounded-xl p-3 text-xs text-gtb-muted">
             <Clock size={13} className="text-gtb-warn flex-shrink-0 mt-0.5" />
-            This transfer will be reviewed by admin before funds are moved. Track status in Transactions.
+            This transfer will be reviewed before funds are moved. Track status in Transactions.
           </div>
         )}
         {type === 'own' && (
