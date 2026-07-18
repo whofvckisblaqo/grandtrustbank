@@ -2,7 +2,37 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import TransactionItem from '@/components/TransactionItem';
+import TransactionReceipt from '@/components/TransactionReceipt';
 import { ArrowLeftRight, Filter, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+
+function buildReceiptFromTxn(txn) {
+  const isCredit = txn.direction === 'credit';
+  const senderName = txn.senderUser
+    ? `${txn.senderUser.firstName} ${txn.senderUser.lastName}`
+    : (txn.metadata?.externalDetails?.bankName || 'External');
+  const receiverName = txn.receiverUser
+    ? `${txn.receiverUser.firstName} ${txn.receiverUser.lastName}`
+    : (txn.metadata?.externalDetails?.accountName || txn.metadata?.externalDetails?.bankName || 'External Account');
+
+  const fromAccountLabel = txn.senderAccount?.accountType === 'current' ? 'Checking' : (txn.senderAccount?.accountType || 'Your Account');
+  const toAccountLabel   = txn.receiverAccount?.accountType === 'current' ? 'Checking' : (txn.receiverAccount?.accountType || 'Your Account');
+
+  return {
+    reference: txn.reference,
+    amount: txn.amount,
+    fee: txn.fee,
+    tax: txn.tax,
+    currency: txn.currency || 'USD',
+    status: txn.status,
+    narration: txn.narration,
+    createdAt: txn.createdAt,
+    type: txn.type,
+    fromLabel: isCredit ? senderName : fromAccountLabel,
+    fromAccountNumber: txn.senderAccount?.accountNumber,
+    toLabel: isCredit ? toAccountLabel : receiverName,
+    toAccountNumber: txn.receiverAccount?.accountNumber,
+  };
+}
 
 export default function TransactionsPage() {
   const { accounts } = useAuth();
@@ -17,6 +47,7 @@ export default function TransactionsPage() {
   const [dateTo, setDateTo]       = useState('');
   const [search, setSearch]       = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedTxn, setSelectedTxn] = useState(null);
   const limit = 15;
 
   const fetchTxns = useCallback(async () => {
@@ -164,7 +195,13 @@ export default function TransactionsPage() {
         ) : (
           <div className="divide-y divide-white/[0.04]">
             {filtered.map(txn => (
-              <TransactionItem key={txn._id} txn={txn} userAccountIds={accountIds} />
+              <button
+                key={txn._id}
+                onClick={() => setSelectedTxn(txn)}
+                className="w-full text-left hover:bg-white/[0.03] transition-colors cursor-pointer"
+              >
+                <TransactionItem txn={txn} userAccountIds={accountIds} />
+              </button>
             ))}
           </div>
         )}
@@ -189,6 +226,10 @@ export default function TransactionsPage() {
             Next <ChevronRight size={16} />
           </button>
         </div>
+      )}
+
+      {selectedTxn && (
+        <TransactionReceipt txn={buildReceiptFromTxn(selectedTxn)} onClose={() => setSelectedTxn(null)} />
       )}
     </div>
   );

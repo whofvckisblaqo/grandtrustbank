@@ -3,9 +3,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Send, CheckCircle, AlertCircle, ArrowLeft, User,
-  DollarSign, ChevronDown, ArrowLeftRight, Globe, Building2, Clock
+  DollarSign, ChevronDown, ArrowLeftRight, Globe, Building2, Clock, Receipt
 } from 'lucide-react';
 import Link from 'next/link';
+import TransactionReceipt from '@/components/TransactionReceipt';
 
 const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n ?? 0);
 
@@ -84,6 +85,7 @@ export default function TransferPage() {
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState('');
   const [result, setResult]       = useState(null);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const active = accounts.filter(a => a.status === 'active');
 
@@ -169,6 +171,24 @@ export default function TransferPage() {
   // ── Success screen ──
   if (step === 3 && result) {
     const isInstant = result.status === 'completed';
+
+    // Build a receipt-shaped object from the transfer result
+    const receiptTxn = {
+      reference: result.reference,
+      amount: result.amount,
+      fee: result.fee,
+      tax: result.tax,
+      currency: fromAccount?.currency || 'USD',
+      status: result.status,
+      narration: narration || (isExternal ? `Wire to ${extAcctName}` : undefined),
+      createdAt: new Date().toISOString(),
+      type: 'transfer',
+      fromLabel: `${fromAccount?.accountType === 'current' ? 'Checking' : fromAccount?.accountType}`,
+      fromAccountNumber: fromAccount?.accountNumber,
+      toLabel: result.recipient?.name,
+      toAccountNumber: result.recipient?.accountNumber,
+    };
+
     return (
       <div className="px-4 sm:px-6 py-6 max-w-lg mx-auto">
         <div className="glass-card rounded-3xl p-8 text-center">
@@ -197,12 +217,19 @@ export default function TransferPage() {
             <div className="flex justify-between text-sm"><span className="text-gtb-muted">Account</span><span className="text-white font-mono text-xs">{result.recipient?.accountNumber}</span></div>
             <div className="flex justify-between text-sm"><span className="text-gtb-muted">Reference</span><span className="text-gtb-accent font-mono text-xs">{result.reference}</span></div>
           </div>
+
+          <button onClick={() => setShowReceipt(true)} className="btn-ghost w-full justify-center mb-3">
+            <Receipt size={16} /> View Receipt
+          </button>
+
           <div className="flex gap-3">
             <button onClick={() => { setStep(1); setAmount(''); setNarration(''); setRecipient(null); setToNumber(''); setResult(null); }}
               className="btn-ghost flex-1 justify-center">New Transfer</button>
             <Link href="/transactions" className="btn-primary flex-1 justify-center">View Status</Link>
           </div>
         </div>
+
+        {showReceipt && <TransactionReceipt txn={receiptTxn} onClose={() => setShowReceipt(false)} />}
       </div>
     );
   }
