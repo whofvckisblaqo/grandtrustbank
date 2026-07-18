@@ -5,7 +5,7 @@ import Account from '@/models/Account';
 import Card from '@/models/Card';
 import Loan from '@/models/Loan';
 import Transaction from '@/models/Transaction';
-import { sendDepositApprovedEmail, sendAccountStatusEmail, sendKycStatusEmail } from '@/lib/email';
+import { sendDepositApprovedEmail, sendAccountStatusEmail, sendKycStatusEmail, sendLimitUpdatedEmail } from '@/lib/email';
 
 export const maxDuration = 30;
 
@@ -26,7 +26,7 @@ async function patchHandler(req, { params }) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { action, creditAmount, accountId, reason } = body;
+    const { action, creditAmount, accountId, reason, limitAmount } = body;
 
     const user = await User.findById(id);
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -166,6 +166,41 @@ async function patchHandler(req, { params }) {
       return NextResponse.json({
         message:    `${fmt(amount)} credited to ${account.accountNumber}`,
         newBalance: account.balance,
+      });
+    }
+
+    if (action === 'update_limit') {
+      const newLimit = parseFloat(limitAmount);
+      if (!newLimit || newLimit <= 0) {
+        return NextResponse.json({ error: 'Enter a valid limit greater than $0' }, { status: 400 });
+      }
+      if (!accountId) {
+        return NextResponse.json({ error: 'Account is required' }, { status: 400 });
+      }
+
+      const account = await Account.findOne({ _id: accountId, user: id });
+      if (!account) {
+        return NextResponse.json({ error: 'Account not found for this user' }, { status: 404 });
+      }
+
+      account.dailyTransferLimit = newLimit;
+      await account.save();
+
+      try {
+        await sendLimitUpdatedEmail({
+          to: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          accountNumber: account.accountNumber,
+          newLimit,
+          currency: account.currency,
+        });
+      } catch (err) {
+        console.error('[LIMIT_UPDATED_EMAIL]', err);
+      }
+
+      return NextResponse.json({
+        message: `Daily limit for ${account.accountNumber} updated to ${fmt(newLimit)}`,
+        newLimit,
       });
     }
 
