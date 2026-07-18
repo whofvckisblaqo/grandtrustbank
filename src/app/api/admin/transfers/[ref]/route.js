@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { withAdminAuth } from '@/lib/withAdminAuth';
 import Transaction from '@/models/Transaction';
 import Account from '@/models/Account';
+import User from '@/models/User';
 import { sendTransferSentEmail, sendTransferReceivedEmail, sendTransferDeclinedEmail } from '@/lib/email';
 
 export const maxDuration = 30;
